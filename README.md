@@ -66,8 +66,9 @@ Tested on one machine: ROG Strix G513QC, BIOS 331, kernel 7.0, Ubuntu 24.04.5.
 | **Tested automatically** | HID descriptor parser using this laptop's real descriptor; helper whitelist; packet layouts; restore rules (`pytest`) |
 | **Tested on the mock laptop** | Every page, helper writes, the approval dialog, the live-lighting rate limit, scenarios, macros and power states (`tests/shots.py`, under Xvfb) |
 | **Checked on the real laptop, read-only** | Model, sensors, fans, curves, profiles, attributes, keyboard interface, GPU state, refresh rates and battery health read correctly (`tests/real_readonly.py`) |
-| **Worked on the real laptop** | `install.sh`, the keyboard query and applying a built-in effect, according to the saved settings |
-| **Not yet tested on real hardware** | Profile, fan curve, charge limit and GPU writes; direct and live lighting; power states; macros; refresh rate change; touchpad, Win key and ROG key settings; background running |
+| **Tested on the real laptop, with settings restored** | Profiles, charge limit, brightness, boot sound, panel overdrive, fan curves, the keyboard query, effects, zone and live colour commands, macro playback, NVIDIA readings, touchpad, Win key, microphone, night light, ROG shortcut, refresh rate and the audio reader (`tests/real_write_check.py`) |
+| **Sent, but only your eyes can confirm** | Whether each lighting effect and zone looks right on the keyboard |
+| **Not tested on real hardware** | Turning off the GPU, saving to keyboard flash and boot/sleep lighting, because they could freeze the laptop or outlast a test. Also scenarios and background running over real use, and the full app window operating real hardware from start to finish |
 | **Unproven protocol details** | Which packet saves to flash; direct colour on this model; zone numbers; see [docs/protocol.md](docs/protocol.md) |
 | **Other ASUS laptops** | Untested. Model data comes from asusctl, and detection is designed to fall back to fewer features |
 
