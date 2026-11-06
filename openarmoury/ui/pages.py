@@ -7,6 +7,7 @@ import shutil
 from gi.repository import Adw, GLib, Gtk
 
 from .. import effects
+from . import design
 from .widgets import CurveView, Gauge, attribute_row, stat_tile
 
 GPU_ATTRIBUTES = ("dgpu_disable", "gpu_mux_mode", "egpu_enable", "egpu_connected", "dgpu_power_state", "mini_led_mode")
@@ -84,8 +85,7 @@ class DashboardPage(Page):
         self.widget = Gtk.ScrolledWindow(child=clamp, hscrollbar_policy=Gtk.PolicyType.NEVER)
 
         identity = ctx.hw.identity()
-        body.append(Gtk.Label(label=identity["product"].split("_")[0] if identity["product"] else "This laptop", xalign=0, css_classes=["home-title"]))
-        body.append(Gtk.Label(label=f"Board {identity['board']} · Firmware {identity['bios']}", xalign=0, css_classes=["dim-label", "caption"]))
+        body.append(design.large_title(identity["product"].split("_")[0] if identity["product"] else "This laptop", f"Board {identity['board']} · Firmware {identity['bios']}"))
 
         conflicts = ctx.hw.conflicts()
         if conflicts:
@@ -94,7 +94,10 @@ class DashboardPage(Page):
         choices = ctx.hw.profile_choices()
         if choices:
             body.append(Gtk.Label(label="Operating mode", xalign=0, css_classes=["section-title"]))
-            row = Gtk.Box(spacing=10, homogeneous=True)
+            row = Gtk.Box(spacing=4, homogeneous=True)
+            self.mode_group = design.GlideGroup(row, "accent", 12)
+            holder = Gtk.Box(css_classes=["mode-tiles", "stagger-0"], orientation=Gtk.Orientation.VERTICAL)
+            holder.append(self.mode_group)
             leader = None
             for choice in choices:
                 content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, halign=Gtk.Align.CENTER, valign=Gtk.Align.CENTER)
@@ -102,13 +105,13 @@ class DashboardPage(Page):
                 image.set_accessible_role(Gtk.AccessibleRole.PRESENTATION)
                 content.append(image)
                 content.append(Gtk.Label(label=PROFILE_LABELS.get(choice, choice.title())))
-                button = Gtk.ToggleButton(child=content, group=leader, css_classes=["mode-tile", f"stagger-{len(self.mode_buttons) % 6}"])
+                button = Gtk.ToggleButton(child=content, group=leader, css_classes=["mode-tile"])
                 button.update_property([Gtk.AccessibleProperty.LABEL], [f"{PROFILE_LABELS.get(choice, choice.title())} mode"])
                 leader = leader or button
                 button.connect("toggled", self._mode_toggled, choice)
                 row.append(button)
                 self.mode_buttons[choice] = button
-            body.append(row)
+            body.append(holder)
 
         body.append(Gtk.Label(label="Live", xalign=0, css_classes=["section-title"], margin_top=6))
         gauges = Gtk.FlowBox(selection_mode=Gtk.SelectionMode.NONE, column_spacing=10, row_spacing=10, homogeneous=True, min_children_per_line=2, max_children_per_line=6)
@@ -141,8 +144,10 @@ class DashboardPage(Page):
         return box
 
     def _mode_toggled(self, button, choice):
-        if not self.updating and button.get_active():
-            apply_profile(self.ctx, choice, lambda _ok: self.refresh())
+        if button.get_active():
+            self.mode_group.select(button)
+            if not self.updating:
+                apply_profile(self.ctx, choice, lambda _ok: self.refresh())
 
     def refresh(self):
         hw = self.ctx.hw
@@ -188,24 +193,19 @@ class PerformancePage(Page):
         self.widget = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.banner = Adw.Banner(title="A restart is needed for a pending firmware change.")
         self.widget.append(self.banner)
-        page = Adw.PreferencesPage(vexpand=True)
+        page = design.new_page("Performance", "How hard your laptop works, and how its graphics behave.")
+        page.set_vexpand(True)
         self.widget.append(page)
         self.buttons = {}
-        self.updating = False
+        self.updating = True
 
-        group = Adw.PreferencesGroup(title="Profile", description="Sets how hard the CPU and fans can run.")
+        group = Adw.PreferencesGroup(title="Profile")
         choices = ctx.hw.profile_choices()
         if choices:
-            row = Adw.ActionRow(title="Performance profile")
-            linked = Gtk.Box(css_classes=["linked"], valign=Gtk.Align.CENTER)
-            leader = None
-            for choice in choices:
-                button = Gtk.ToggleButton(label=PROFILE_LABELS.get(choice, choice.title()), group=leader)
-                leader = leader or button
+            row = design.SegmentedRow("Performance profile", [PROFILE_LABELS.get(c, c.title()) for c in choices])
+            for button, choice in zip(row.buttons, choices):
                 button.connect("toggled", self._profile_toggled, choice)
-                linked.append(button)
                 self.buttons[choice] = button
-            row.add_suffix(linked)
             group.add(row)
         else:
             group.add(Adw.ActionRow(title="Not available", subtitle="This laptop's kernel exposes no platform profile."))
@@ -231,6 +231,7 @@ class PerformancePage(Page):
             for attribute in power:
                 power_group.add(attribute_row(ctx, attribute, on_written=self.refresh))
             page.add(power_group)
+        self.updating = False
         self.refresh()
 
     def _profile_toggled(self, button, choice):
@@ -254,7 +255,7 @@ class FansPage(Page):
 
     def __init__(self, ctx):
         super().__init__(ctx)
-        self.widget = page = Adw.PreferencesPage()
+        self.widget = page = design.new_page("Fans", "Decide how quickly the fans respond to heat.")
         self.channels = ctx.hw.fan_curve_channels()
         self.channel = self.channels[0][0] if self.channels else None
         self.updating = False
@@ -265,10 +266,10 @@ class FansPage(Page):
             return
 
         select = Adw.PreferencesGroup(title="Fan curve", description="Each fan has 8 points. Drag a point, or focus the chart and use the arrow keys.")
-        self.fan_row = Adw.ComboRow(title="Fan", model=Gtk.StringList.new([name for _n, name in self.channels]))
+        self.fan_row = design.choice_row("Fan", [name for _n, name in self.channels])
         self.fan_row.connect("notify::selected", self._fan_changed)
         select.add(self.fan_row)
-        self.preset_row = Adw.ComboRow(title="Start from", model=Gtk.StringList.new(["Current"] + list(FAN_PRESETS)))
+        self.preset_row = design.choice_row("Start from", ["Current"] + list(FAN_PRESETS))
         self.preset_row.connect("notify::selected", self._preset_changed)
         select.add(self.preset_row)
         page.add(select)
@@ -382,7 +383,7 @@ class SystemPage(Page):
 
     def __init__(self, ctx):
         super().__init__(ctx)
-        self.widget = page = Adw.PreferencesPage()
+        self.widget = page = design.new_page("System", "Battery, input, display and how the app runs.")
         battery = ctx.hw.battery()
         charging = Adw.PreferencesGroup(title="Battery")
         if battery and battery["limit"] is not None:
@@ -394,14 +395,12 @@ class SystemPage(Page):
             button.connect("clicked", self._apply_limit, battery["limit_path"])
             self.limit_row.add_suffix(button)
             charging.add(self.limit_row)
-            presets = Gtk.Box(css_classes=["linked"], valign=Gtk.Align.CENTER)
-            for value, label in ((100, "Full"), (80, "Balanced"), (60, "Longest life")):
-                preset = Gtk.Button(label=label, tooltip_text=f"Charge to {value}%")
-                preset.connect("clicked", self._limit_preset, value, battery["limit_path"])
-                presets.append(preset)
-            row = Adw.ActionRow(title="Battery care", subtitle="Full for travel, lower limits for a laptop mostly on AC.")
-            row.add_suffix(presets)
-            charging.add(row)
+            self.care_values = [100, 80, 60]
+            current = self.care_values.index(battery["limit"]) if battery["limit"] in self.care_values else 0
+            self.care_row = design.SegmentedRow("Battery care", ["Full", "Balanced", "Longest life"], current, "Full for travel, lower limits for a laptop mostly on AC.")
+            self.care_ready = True
+            self.care_row.connect("notify::selected", self._care_changed, battery["limit_path"])
+            charging.add(self.care_row)
             full = Adw.ActionRow(title="Charge to 100% once", subtitle="Goes back to your limit when full. Needs the app running until then.")
             full_button = Gtk.Button(label="Start", valign=Gtk.Align.CENTER)
             full_button.connect("clicked", self._full_charge, battery["limit_path"])
@@ -439,9 +438,8 @@ class SystemPage(Page):
         display = Adw.PreferencesGroup(title="Display")
         if self.rates and len(self.rates["modes"]) > 1:
             labels = [f"{rate:.0f} Hz" for rate, _id in self.rates["modes"]]
-            self.rate_row = Adw.ComboRow(title="Refresh rate", subtitle="Lower rates save battery. This is reset on restart.", model=Gtk.StringList.new(labels))
             rates = [rate for rate, _id in self.rates["modes"]]
-            self.rate_row.set_selected(rates.index(self.rates["current"]) if self.rates["current"] in rates else 0)
+            self.rate_row = design.choice_row("Refresh rate", labels, rates.index(self.rates["current"]) if self.rates["current"] in rates else 0, "Higher is smoother, and lower saves battery. Resets on restart.")
             self.rate_row.connect("notify::selected", self._rate_changed)
             display.add(self.rate_row)
         night = desktop.night_light()
@@ -524,8 +522,8 @@ class SystemPage(Page):
 
         self.ctx.submit([self.ctx.write_op("charge-limit", path, value)], done)
 
-    def _limit_preset(self, _button, value, path):
-        self.limit_row.set_value(value)
+    def _care_changed(self, row, _p, path):
+        self.limit_row.set_value(self.care_values[row.get_selected()])
         self._apply_limit(None, path)
 
     def _full_charge(self, _button, path):

@@ -50,9 +50,10 @@ def test_integrated_gpu_is_not_reported_as_discrete(tmp_path):
 
 
 def test_desktop_processes_are_never_offered_for_closing(hw):
-    names = [p["name"] for p in monitor.Monitor(hw).top_processes(os.getuid())]
-    assert names == ["firefox", "code"]
-    assert monitor.Monitor(hw).top_processes(os.getuid() + 1) == []
+    meter = monitor.Monitor(hw)
+    meter.sample_slow()
+    assert [p["name"] for p in meter.top_processes(os.getuid())] == ["firefox", "code"]
+    assert meter.top_processes(os.getuid() + 1) == []
 
 
 def test_format_rate():

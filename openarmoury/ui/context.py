@@ -54,6 +54,7 @@ class Context:
         self.frame_busy = False
         self.limiter = effects.RateLimiter()
         self.direct_started = False
+        self.save_source = None
 
     @property
     def is_demo(self):
@@ -81,10 +82,23 @@ class Context:
         if source == "battery":
             battery = self.hw.battery()
             return battery["capacity"] if battery else None
-        return self.hw.cpu_temp()
+        cached = self.monitor.temperature_cache
+        return cached if cached is not None else self.hw.cpu_temp()
 
     def render(self, effect, now):
         return effects.render(effect, self.board.light_keys(), now, self.effect_input(effect), self.meter.level)
+
+    def save_soon(self):
+        """Save settings shortly after the last change, so dragging a control never waits on the disk."""
+        if self.save_source:
+            GLib.source_remove(self.save_source)
+
+        def save():
+            self.save_source = None
+            self.config.save()
+            return False
+
+        self.save_source = GLib.timeout_add(400, save)
 
     def toast(self, message):
         if self.toasts:
@@ -288,6 +302,10 @@ class Context:
         self.submit(ops, finished)
 
     def close(self):
+        if self.save_source:
+            GLib.source_remove(self.save_source)
+            self.save_source = None
+        self.config.save()
         self.stop_live()
         self.meter.stop()
         self.executor.shutdown(wait=True)

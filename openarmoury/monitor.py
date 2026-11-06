@@ -25,6 +25,13 @@ class Monitor:
         self.cpu_percent = 0.0
         self.net_down = 0.0
         self.net_up = 0.0
+        self.process_cache = []
+        self.temperature_cache = None
+
+    def sample_slow(self):
+        """Work too slow for the UI thread. Runs on a background thread, and a list swap is safe in Python."""
+        self.process_cache = self.processes()
+        self.temperature_cache = self.hw.cpu_temp()
 
     def sample(self, now=None):
         """Update the rates. Call at a steady interval."""
@@ -121,7 +128,7 @@ class Monitor:
 
     def top_processes(self, uid, count=6):
         """The biggest of your own processes that are safe to offer to close."""
-        own = [p for p in self.processes() if p["uid"] == uid and p["name"] not in PROTECTED and p["memory"]]
+        own = [p for p in self.process_cache if p["uid"] == uid and p["name"] not in PROTECTED and p["memory"]]
         return sorted(own, key=lambda p: -p["memory"])[:count]
 
 

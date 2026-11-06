@@ -6,14 +6,13 @@ from gi.repository import Adw, Gtk
 
 from .. import effects, keyboard, packets
 from ..system import LED
+from . import design
 from .pages import Page
 from .widgets import KeyboardView, colour_button
 
 
 def _combo(title, options, selected=0):
-    row = Adw.ComboRow(title=title, model=Gtk.StringList.new(options))
-    row.set_selected(selected)
-    return row
+    return design.choice_row(title, options, selected)
 
 
 class LightingPage(Page):
@@ -22,7 +21,7 @@ class LightingPage(Page):
 
     def __init__(self, ctx):
         super().__init__(ctx)
-        self.widget = page = Adw.PreferencesPage()
+        self.widget = page = design.new_page("Lighting", "Effects and colours that run on the keyboard itself.")
         saved = ctx.config["lighting"] or {}
         self.colour = saved.get("colour", [255, 40, 0])
 
@@ -43,7 +42,7 @@ class LightingPage(Page):
         page.add(self.detect_group)
 
         self.effect_group = Adw.PreferencesGroup(title="Effect")
-        self.mode_row = _combo("Effect", ["Static"])
+        self.mode_row = Adw.ComboRow(title="Effect", model=Gtk.StringList.new(["Static"]))
         self.effect_group.add(self.mode_row)
         self.colour_row = Adw.ActionRow(title="Colour")
         self.colour_row.add_suffix(colour_button(self.colour, self._set_colour))
@@ -52,7 +51,7 @@ class LightingPage(Page):
         self.effect_group.add(self.speed_row)
         self.direction_row = _combo("Direction", ["Right", "Left", "Up", "Down"], ["right", "left", "up", "down"].index(saved.get("direction", "right")))
         self.effect_group.add(self.direction_row)
-        self.zone_row = _combo("Area", ["Whole keyboard"])
+        self.zone_row = Adw.ComboRow(title="Area", model=Gtk.StringList.new(["Whole keyboard"]))
         self.effect_group.add(self.zone_row)
         self.save_row = Adw.SwitchRow(title="Save to the keyboard", subtitle="Off keeps it until restart. Which packet writes flash isn't proven, so this stays off unless you choose it.", active=saved.get("save", False))
         self.effect_group.add(self.save_row)
@@ -239,7 +238,8 @@ class StudioPage(Page):
         self.effect = copy.deepcopy(ctx.config["studio_effect"] or effects.BUILTIN_PRESETS["Aurora"])
         self.paint_colour = [255, 80, 0]
         self.paint = {"kind": "paint", "colours": {}, "base": [0, 0, 0]}
-        self.widget = outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8, margin_top=12, margin_bottom=12, margin_start=12, margin_end=12)
+        self.widget = outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10, margin_top=6, margin_bottom=12, margin_start=18, margin_end=18)
+        outer.append(design.large_title("Light Studio", "Paint, animate and link your keyboard's colours to what the laptop is doing."))
 
         frame = Gtk.Frame(css_classes=["view"])
         self.view = KeyboardView(self._paint_key)
@@ -253,8 +253,9 @@ class StudioPage(Page):
         outer.append(controls)
 
         self.stack = Adw.ViewStack(vexpand=True)
-        switcher = Adw.ViewSwitcher(stack=self.stack, policy=Adw.ViewSwitcherPolicy.WIDE, halign=Gtk.Align.CENTER)
-        outer.append(switcher)
+        self.tab_row = None
+        self.tab_holder = Gtk.Box(halign=Gtk.Align.CENTER, css_classes=["segmented"])
+        outer.append(self.tab_holder)
         scroller = Gtk.ScrolledWindow(child=self.stack, vexpand=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
         outer.append(scroller)
 
@@ -263,6 +264,7 @@ class StudioPage(Page):
         self.stack.add_titled_with_icon(self._smart_tab(), "smart", "Smart", "dialog-information-symbolic")
         self.stack.add_titled_with_icon(self._music_tab(), "music", "Music", "audio-x-generic-symbolic")
         self.stack.add_titled_with_icon(self._presets_tab(), "presets", "Presets", "view-list-symbolic")
+        self._build_tabs()
         self.stack.connect("notify::visible-child-name", self._tab_changed)
         ctx.board_listeners.append(self.rebuild)
         self.rebuild()
@@ -277,8 +279,31 @@ class StudioPage(Page):
             else f"This keyboard has {board.zone_count} lighting {'zone' if board.zone_count == 1 else 'zones'}, so painting a key colours its whole zone."
         )
 
+    def _build_tabs(self):
+        """A gliding segmented control for the tabs."""
+        self.tab_names = ["paint", "keyframes", "smart", "music", "presets"]
+        box = Gtk.Box(homogeneous=True)
+        self.tab_group = design.GlideGroup(box, "neutral", 7)
+        self.tab_buttons = {}
+        leader = None
+        for name in self.tab_names:
+            button = Gtk.ToggleButton(label=name.title(), group=leader, css_classes=["segment"])
+            leader = leader or button
+            button.connect("toggled", self._tab_clicked, name)
+            box.append(button)
+            self.tab_buttons[name] = button
+        self.tab_holder.append(self.tab_group)
+        self.tab_buttons["paint"].set_active(True)
+
+    def _tab_clicked(self, button, name):
+        if button.get_active():
+            self.tab_group.select(button)
+            if self.stack.get_visible_child_name() != name:
+                self.stack.set_visible_child_name(name)
+
     def _tab_changed(self, stack, _p):
         name = stack.get_visible_child_name()
+        self.tab_buttons[name].set_active(True)
         if name == "paint":
             self._use(self.paint)
         elif name == "keyframes":
@@ -290,7 +315,8 @@ class StudioPage(Page):
 
     def _use(self, effect):
         self.effect = effect
-        self.ctx.config["studio_effect"] = effect
+        self.ctx.config.data["studio_effect"] = effect
+        self.ctx.save_soon()
         self._sync_meter()
         if self.ctx.live_effect:
             self.ctx.live_effect = effect
@@ -487,7 +513,6 @@ class StudioPage(Page):
 
     def _presets_tab(self):
         page = Adw.PreferencesPage()
-        self.preset_page = page
         builtin = Adw.PreferencesGroup(title="Built in")
         for name, effect in effects.BUILTIN_PRESETS.items():
             builtin.add(self._preset_row(name, effect))

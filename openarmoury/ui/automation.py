@@ -16,8 +16,12 @@ class Automation:
             "brightness": hw.brightness(),
             "touchpad": desktop.touchpad(),
             "win_key": desktop.win_key(),
-            "low_refresh": self._low_refresh(),
+            # Asking the display costs time, so only do it when a rule cares.
+            "low_refresh": self._low_refresh() if self._uses_refresh() else None,
         }
+
+    def _uses_refresh(self):
+        return any((self.ctx.config["power_rules"].get(k) or {}).get("low_refresh") is not None for k in ("ac", "battery")) or "low_refresh" in self.saved
 
     def _low_refresh(self):
         rates = self.ctx.desktop.refresh_rates()
@@ -30,7 +34,7 @@ class Automation:
         scenarios, power = config["scenarios"], config["power_rules"]
         if not scenarios and not any(power.get(k) for k in ("ac", "battery")) and not self.saved:
             return
-        processes = ctx.monitor.processes() if scenarios else []
+        processes = ctx.monitor.process_cache if scenarios else []
         desired, scenario = rules.desired_state(power, scenarios, ctx.hw.on_battery(), processes)
         name = scenario["name"] if scenario else None
         if name != self.active:

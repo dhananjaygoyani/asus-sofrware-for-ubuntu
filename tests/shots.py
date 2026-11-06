@@ -38,10 +38,17 @@ def page_named(window, title):
 
 def capture(window, name):
     paintable = Gtk.WidgetPaintable.new(window)
-    width, height = window.get_width(), window.get_height()
-    snapshot = Gtk.Snapshot()
-    paintable.snapshot(snapshot, width, height)
-    node = snapshot.to_node()
+    context = GLib.MainContext.default()
+    node = None
+    for _attempt in range(200):
+        snapshot = Gtk.Snapshot()
+        paintable.snapshot(snapshot, window.get_width(), window.get_height())
+        node = snapshot.to_node()
+        if node:
+            break
+        # The window is mid-layout, so there's nothing to paint until the next frame.
+        context.iteration(True)
+    assert node, f"window never painted for {name}"
     texture = window.get_native().get_renderer().render_texture(node, None)
     texture.save_to_png(str(OUT / f"{name}.png"))
     print("saved", name)
@@ -56,6 +63,30 @@ def scenario(app):
         yield 700
         capture(window, title.lower().replace(" ", "-"))
 
+    # Every icon named in the design exists on this system, so no row shows a broken image.
+    theme = Gtk.IconTheme.get_for_display(window.get_display())
+    from openarmoury.ui.app import ROW_ICONS  # noqa: E402
+
+    missing = sorted({icon for icon, _c in ROW_ICONS.values() if not theme.has_icon(icon)} | {p.icon for p in window.pages if not theme.has_icon(p.icon)})
+    assert not missing, f"missing icons: {missing}"
+
+    # The pill glides: part way through a move it is between the two rows, then settles exactly on the new one.
+    window.show_page("Home")
+    yield 900
+    pill = window.sidebar_group.pill
+    start = pill.top.value
+    window.show_page("System")
+    target_row = window.rows.get_selected_row()
+    yield 60
+    assert start < pill.top.value < pill.top.target or pill.top.value == pill.top.target, "pill didn't glide"
+    moving_height = pill.bottom.value - pill.top.value
+    yield 1200
+    ok, bounds = target_row.compute_bounds(window.sidebar_group)
+    assert ok and abs(pill.top.value - bounds.get_y()) < 1, "pill didn't settle on the selected row"
+    assert abs((pill.bottom.value - pill.top.value) - bounds.get_height()) < 1, "pill kept its stretch"
+    print("pill height while moving:", round(moving_height), "at rest:", round(bounds.get_height()))
+    assert window.stack.leaving is None, "page transition didn't finish"
+
     # Home: a mode tile changes the profile, and the tiles follow changes made elsewhere.
     window.show_page("Home")
     home = page_named(window, "Home")
@@ -63,8 +94,14 @@ def scenario(app):
     yield 400
     assert ctx.hw.profile() == "performance", "mode tile did not change the profile"
     assert all(g.value is not None for g in home.gauges.values()), "a gauge has no reading"
-    yield 800
+    # Sensor updates would keep moving the target, so hold them while the spring settles.
+    while window.sampling:
+        yield 50
+    window.sampling = True
+    home.refresh()
+    yield 2000
     assert all(abs(g.shown - g.value) < 1 for g in home.gauges.values()), "a gauge didn't finish animating"
+    window.sampling = False
     capture(window, "home-performance")
     window.show_page("Performance")
     page_named(window, "Performance").buttons["balanced"].set_active(True)
@@ -85,7 +122,7 @@ def scenario(app):
     fans = page_named(window, "Fans")
     fans.preset_row.set_selected(3)
     assert fans.curve.points == FAN_PRESETS["Cool"], "preset must be the target straight away"
-    yield 500
+    yield 1100
     assert fans.curve.drawn is None, "curve animation didn't finish"
     fans._apply(True)
     yield 500
@@ -297,13 +334,17 @@ def scenario(app):
     yield 100
     window._slow()
     assert all(abs(g.shown - g.value) < 1 for g in home.gauges.values()), "gauges animate with animations off"
+    assert window.stack.leaving is None, "page transition still running with animations off"
     window.show_page("Fans")
     fans.preset_row.set_selected(1)
     assert fans.curve.drawn is None, "curve animates with animations off"
+    pill = window.sidebar_group.pill
+    window.show_page("System")
+    assert pill.top.animation is None or pill.top.value == pill.top.target, "pill animates with animations off"
     Gtk.Settings.get_default().set_property(SETTINGS_ANIMATIONS, True)
 
     # Narrow window: the sidebar should collapse rather than overflow.
-    window.set_default_size(530, 700)
+    window.set_default_size(580, 700)
     yield 500
     capture(window, "narrow")
 

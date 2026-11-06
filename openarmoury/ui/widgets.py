@@ -7,10 +7,10 @@ gi.require_version("Graphene", "1.0")
 gi.require_version("Gsk", "4.0")
 from gi.repository import Adw, Gdk, GLib, Graphene, Gsk, Gtk  # noqa: E402
 
+from . import design  # noqa: E402
 
-ACCENT = (0.04, 0.52, 1.0)
-GAUGE_MS = 600
-CURVE_MS = 380
+
+ACCENT = design.ACCENT
 
 
 def _colour(r, g, b, a=1.0):
@@ -97,13 +97,10 @@ class Gauge(Canvas):
         if value is None:
             self.queue_draw()
             return
+        velocity = self.animation.get_velocity() if self.animation else 0.0
         if self.animation:
             self.animation.pause()
-        # Adwaita skips to the end by itself if animations are off or the dial isn't on screen.
-        target = Adw.CallbackAnimationTarget.new(self._animate)
-        self.animation = Adw.TimedAnimation.new(self, self.shown, value, GAUGE_MS, target)
-        self.animation.set_easing(Adw.Easing.EASE_OUT_CUBIC)
-        self.animation.play()
+        self.animation = design.spring(self, self.shown, value, design.GAUGE, self._animate, velocity)
 
     def _animate(self, value):
         self.shown = value
@@ -291,11 +288,7 @@ class CurveView(Canvas):
             self.drawn = [[a[i] + (b[i] - a[i]) * amount for i in range(2)] for a, b in zip(start, self.points)]
             self.queue_draw()
 
-        target = Adw.CallbackAnimationTarget.new(step)
-        self.animation = Adw.TimedAnimation.new(self, 0, 1, CURVE_MS, target)
-        self.animation.set_easing(Adw.Easing.EASE_OUT_CUBIC)
-        self.animation.connect("done", lambda _a: self._stop_animation())
-        self.animation.play()
+        self.animation = design.spring(self, 0.0, 1.0, design.CURVE, step, on_done=self._stop_animation)
 
     def _stop_animation(self):
         animation, self.animation = self.animation, None
@@ -463,9 +456,7 @@ def attribute_row(ctx, attribute, warning=None, on_written=None):
         row.connect("notify::active", lambda r, _p: send("1" if r.get_active() else "0"))
         return row
     if choices:
-        row = Adw.ComboRow(title=title, subtitle=label, model=Gtk.StringList.new(choices))
-        if attribute["value"] in choices:
-            row.set_selected(choices.index(attribute["value"]))
+        row = design.choice_row(title, choices, choices.index(attribute["value"]) if attribute["value"] in choices else 0, label)
         def revert():
             current = ctx.hw.read(attribute["path"])
             if current in choices:

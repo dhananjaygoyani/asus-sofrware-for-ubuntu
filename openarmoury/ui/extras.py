@@ -6,6 +6,7 @@ import signal
 from gi.repository import Adw, Gio, GLib, Gtk
 
 from .. import games, monitor
+from . import design
 from .context import Op
 from .pages import PROFILE_LABELS, Page
 from .widgets import Sparkline, stat_tile
@@ -18,18 +19,20 @@ MAX_DELAY_MS = 5000
 
 class MonitorPage(Page):
     title = "Monitor"
-    icon = "utilities-system-monitor-symbolic"
+    icon = "speedometer-symbolic"
 
     def __init__(self, ctx):
         super().__init__(ctx)
-        self.widget = page = Adw.PreferencesPage()
+        self.widget = page = design.new_page("Monitor", "What your laptop is doing right now.")
         self.history = {"cpu": [], "memory": []}
+        self.process_signature = None
 
-        charts = Adw.PreferencesGroup(title="Live", description="Read from the kernel every 2 seconds.")
+        charts = Adw.PreferencesGroup()
         grid = Gtk.FlowBox(selection_mode=Gtk.SelectionMode.NONE, column_spacing=12, row_spacing=12, homogeneous=True, min_children_per_line=2, max_children_per_line=2)
         self.charts = {}
         for key, title in (("cpu", "CPU usage"), ("memory", "Memory used")):
             box, value, detail = stat_tile(title)
+            box.add_css_class("home-card")
             line = Sparkline()
             box.append(line)
             grid.append(box)
@@ -83,10 +86,17 @@ class MonitorPage(Page):
         self._refresh_processes()
 
     def _refresh_processes(self):
+        top = self.ctx.monitor.top_processes(os.getuid())
+        signature = [p["name"] for p in top]
+        if signature == self.process_signature:
+            for row, process in zip(self.process_rows, top):
+                row.set_subtitle(f"{process['memory'] / 2**20:.0f} MB")
+            return
+        self.process_signature = signature
         for row in self.process_rows:
             self.memory_group.remove(row)
         self.process_rows = []
-        for process in self.ctx.monitor.top_processes(os.getuid()):
+        for process in top:
             row = Adw.ActionRow(title=GLib.markup_escape_text(process["name"]), subtitle=f"{process['memory'] / 2**20:.0f} MB")
             button = Gtk.Button(label="Close", valign=Gtk.Align.CENTER)
             button.connect("clicked", self._ask_close, process)
@@ -115,12 +125,9 @@ class MonitorPage(Page):
 
 
 def _optional_combo(title, options, value):
-    """A combo row with a 'No change' first entry. Options are (value, label) pairs."""
-    row = Adw.ComboRow(title=title, model=Gtk.StringList.new(["No change"] + [label for _v, label in options]))
-    for index, (option, _label) in enumerate(options, 1):
-        if option == value:
-            row.set_selected(index)
-    return row
+    """A choice with a 'No change' first entry. Options are (value, label) pairs."""
+    selected = next((index for index, (option, _label) in enumerate(options, 1) if option == value), 0)
+    return design.choice_row(title, ["No change"] + [label for _v, label in options], selected)
 
 
 class ScenariosPage(Page):
@@ -129,7 +136,7 @@ class ScenariosPage(Page):
 
     def __init__(self, ctx):
         super().__init__(ctx)
-        self.widget = page = Adw.PreferencesPage()
+        self.widget = page = design.new_page("Scenarios", "Change settings automatically for each game, and for plugged-in or battery use.")
         self.profiles = [(c, PROFILE_LABELS.get(c, c.title())) for c in ctx.hw.profile_choices()]
         self.levels = list(enumerate(BRIGHTNESS))
 
@@ -288,9 +295,9 @@ class MacrosPage(Page):
 
     def __init__(self, ctx):
         super().__init__(ctx)
-        self.widget = page = Adw.PreferencesPage()
+        self.widget = page = design.new_page("Macros", "Record a series of keys and replay it anywhere.")
         self.group = Adw.PreferencesGroup(
-            title="Keyboard macros",
+            title="Your macros",
             description="Record keys inside the recording window only, then replay them anywhere. Don't record passwords: macros are stored as plain text. Playback goes through the helper, so it may ask for your password.",
         )
         add = Gtk.Button(label="Record", css_classes=["flat"], valign=Gtk.Align.CENTER)

@@ -1,100 +1,136 @@
-/* OpenArmoury's desktop-style theme. Colours for light and dark are in theme-light.css and theme-dark.css. */
+/* OpenArmoury's desktop theme. Colours for light and dark are in theme-light.css and theme-dark.css. */
 @define-color accent_bg_color #0a84ff;
 @define-color accent_fg_color #ffffff;
 @define-color destructive_bg_color #ff453a;
 
-@keyframes page-in-a {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: none; }
-}
-@keyframes page-in-b {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: none; }
-}
 @keyframes card-in {
-  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  from { opacity: 0; transform: translateY(16px) scale(0.965); }
   to { opacity: 1; transform: none; }
 }
-
-.page-enter-a { animation: page-in-a 320ms cubic-bezier(0.22, 0.9, 0.3, 1); }
-.page-enter-b { animation: page-in-b 320ms cubic-bezier(0.22, 0.9, 0.3, 1); }
-
-.stagger-0 { animation: card-in 420ms cubic-bezier(0.22, 0.9, 0.3, 1) backwards; }
-.stagger-1 { animation: card-in 420ms cubic-bezier(0.22, 0.9, 0.3, 1) 50ms backwards; }
-.stagger-2 { animation: card-in 420ms cubic-bezier(0.22, 0.9, 0.3, 1) 100ms backwards; }
-.stagger-3 { animation: card-in 420ms cubic-bezier(0.22, 0.9, 0.3, 1) 150ms backwards; }
-.stagger-4 { animation: card-in 420ms cubic-bezier(0.22, 0.9, 0.3, 1) 200ms backwards; }
-.stagger-5 { animation: card-in 420ms cubic-bezier(0.22, 0.9, 0.3, 1) 250ms backwards; }
+.stagger-0 { animation: card-in 520ms cubic-bezier(0.16, 1, 0.3, 1) backwards; }
+.stagger-1 { animation: card-in 520ms cubic-bezier(0.16, 1, 0.3, 1) 45ms backwards; }
+.stagger-2 { animation: card-in 520ms cubic-bezier(0.16, 1, 0.3, 1) 90ms backwards; }
+.stagger-3 { animation: card-in 520ms cubic-bezier(0.16, 1, 0.3, 1) 135ms backwards; }
+.stagger-4 { animation: card-in 520ms cubic-bezier(0.16, 1, 0.3, 1) 180ms backwards; }
+.stagger-5 { animation: card-in 520ms cubic-bezier(0.16, 1, 0.3, 1) 225ms backwards; }
 
 /* Window buttons */
-windowcontrols { margin: 0 6px; border-spacing: 8px; }
+windowcontrols { margin: 0 8px; border-spacing: 8px; }
 windowcontrols button {
   min-width: 13px; min-height: 13px; padding: 0; margin: 0;
-  border-radius: 50%; box-shadow: none;
-  transition: filter 120ms ease-out, transform 120ms ease-out;
+  border-radius: 50%; box-shadow: inset 0 0 0 1px alpha(#000000, 0.12);
+  transition: filter 140ms ease-out, transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-windowcontrols button image { opacity: 0; -gtk-icon-size: 9px; color: rgba(0, 0, 0, 0.65); transition: opacity 120ms ease-out; }
+windowcontrols button image { opacity: 0; -gtk-icon-size: 9px; color: rgba(0, 0, 0, 0.65); transition: opacity 140ms ease-out; }
 windowcontrols:hover button image { opacity: 1; }
 windowcontrols button.close { background: #ff5f57; }
 windowcontrols button.minimize { background: #febc2e; }
 windowcontrols button.maximize { background: #28c840; }
-windowcontrols button:hover { filter: brightness(1.08); }
-windowcontrols button:active { filter: brightness(0.85); transform: scale(0.92); }
+windowcontrols button:hover { filter: brightness(1.06); }
+windowcontrols button:active { filter: brightness(0.82); transform: scale(0.9); }
 
-/* Shape and motion for every control */
-button, row, entry, switch, spinbutton, dropdown {
-  transition: background 160ms ease-out, box-shadow 160ms ease-out, transform 140ms cubic-bezier(0.3, 1.3, 0.5, 1), border-color 160ms ease-out, color 160ms ease-out, opacity 160ms ease-out;
+/* Motion for every control */
+button, row, entry, spinbutton, dropdown, checkbutton {
+  transition: background 200ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 240ms cubic-bezier(0.16, 1, 0.3, 1), transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1), color 200ms ease-out, opacity 200ms ease-out, border-color 200ms ease-out;
 }
-button { border-radius: 8px; }
-button:active { transform: scale(0.97); }
-button.suggested-action { box-shadow: 0 1px 2px alpha(#000000, 0.2); }
-switch { border-radius: 999px; }
-switch slider { border-radius: 50%; transition: margin 220ms cubic-bezier(0.3, 1.3, 0.5, 1), background 160ms ease-out; }
-frame { border-radius: 12px; }
-.boxed-list { border-radius: 12px; box-shadow: 0 1px 3px alpha(#000000, 0.1); }
-.boxed-list row:first-child { border-top-left-radius: 12px; border-top-right-radius: 12px; }
-.boxed-list row:last-child { border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }
+button { border-radius: 8px; font-weight: 500; }
+button:active { transform: scale(0.96); transition-duration: 90ms; }
+button.suggested-action { box-shadow: 0 1px 2px alpha(#000000, 0.2), inset 0 1px 0 alpha(#ffffff, 0.22); }
+button.suggested-action:hover { box-shadow: 0 4px 14px alpha(@accent_bg_color, 0.45), inset 0 1px 0 alpha(#ffffff, 0.22); }
 
-/* Sidebar */
-.navigation-sidebar { background: transparent; padding: 4px 10px; }
-.navigation-sidebar row { border-radius: 8px; margin: 2px 0; padding: 6px 8px; }
-.navigation-sidebar row:hover { background: alpha(currentColor, 0.07); }
-.navigation-sidebar row:active { transform: scale(0.98); }
-.navigation-sidebar row:selected { background: @accent_bg_color; color: #ffffff; }
-.navigation-sidebar row:selected image { color: #ffffff; }
-.navigation-sidebar image { color: @accent_bg_color; }
+switch {
+  border-radius: 999px; min-width: 42px; min-height: 24px; padding: 0;
+  background: alpha(currentColor, 0.18);
+  transition: background 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+switch:checked { background: #30d158; }
+switch slider {
+  border-radius: 50%; min-width: 20px; min-height: 20px; margin: 2px;
+  background: #ffffff; box-shadow: 0 1px 4px alpha(#000000, 0.34);
+  transition: margin 340ms cubic-bezier(0.34, 1.4, 0.64, 1);
+}
 
-.toolbar-title { font-size: 15px; font-weight: 700; margin-left: 10px; }
+/* Panels */
+frame, .view { border-radius: 14px; }
+frame { border: none; box-shadow: 0 1px 3px alpha(#000000, 0.1), 0 0 0 1px alpha(currentColor, 0.06); }
+
+.boxed-list {
+  border-radius: 12px; border: none; background: @card_bg_color;
+  box-shadow: 0 1px 3px alpha(#000000, 0.1), 0 0 0 1px alpha(currentColor, 0.05);
+}
+.boxed-list > row { background: transparent; min-height: 50px; }
+.boxed-list > row:first-child { border-top-left-radius: 12px; border-top-right-radius: 12px; }
+.boxed-list > row:last-child { border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }
+.boxed-list > row:hover { background: alpha(currentColor, 0.035); }
+.boxed-list > row:active { background: alpha(currentColor, 0.06); }
+row .title { font-weight: 500; }
+row .subtitle { font-size: 12px; opacity: 0.62; }
+preferencesgroup > box > box > box .heading, .designed-page .heading { font-size: 13px; font-weight: 600; opacity: 0.72; }
+
+.badge { border-radius: 7px; color: #ffffff; box-shadow: inset 0 1px 0 alpha(#ffffff, 0.25), 0 1px 2px alpha(#000000, 0.18); }
+.badge image { color: #ffffff; }
+.badge-blue { background: linear-gradient(to bottom, #3ca0ff, #0a78f0); }
+.badge-green { background: linear-gradient(to bottom, #4cd964, #28b34a); }
+.badge-orange { background: linear-gradient(to bottom, #ffa83a, #f58a0b); }
+.badge-red { background: linear-gradient(to bottom, #ff6259, #ec3a30); }
+.badge-purple { background: linear-gradient(to bottom, #c26bea, #a340d6); }
+.badge-pink { background: linear-gradient(to bottom, #ff5c8d, #f0366f); }
+.badge-teal { background: linear-gradient(to bottom, #48c9d6, #1fa8b8); }
+.badge-indigo { background: linear-gradient(to bottom, #7078f2, #4d55dc); }
+.badge-gray { background: linear-gradient(to bottom, #a0a0a8, #7c7c84); }
+
+/* Segmented control. The pill behind the selected item is drawn by GlidePill. */
+.segmented { background: alpha(currentColor, 0.09); border-radius: 9px; padding: 2px; }
+.segments { border-spacing: 0; }
+.segment, .segment:hover, .segment:checked, .segment:active {
+  background: transparent; box-shadow: none; border-radius: 7px;
+  min-height: 24px; padding: 2px 13px; font-size: 13px; font-weight: 500;
+}
+.segment { color: alpha(currentColor, 0.72); }
+.segment:hover { color: currentColor; }
+.segment:checked { color: currentColor; font-weight: 600; }
+
+/* Sidebar. The selection pill is drawn by GlidePill. */
+.sidebar-pane, .content-pane { background: transparent; border: none; box-shadow: none; }
+navigation-split-view separator, navigation-split-view > separator { background: transparent; background-image: none; border: none; min-width: 0; min-height: 0; box-shadow: none; }
+.sidebar-panel {
+  margin: 8px 0 8px 8px; border-radius: 16px; background: @sidebar_bg_color;
+  box-shadow: 0 2px 10px alpha(#000000, 0.1), 0 0 0 1px alpha(currentColor, 0.06), inset 0 1px 0 alpha(#ffffff, 0.14);
+}
+.sidebar-panel headerbar { background: transparent; box-shadow: none; }
+.sidebar-list { background: transparent; }
+.sidebar-list row {
+  background: transparent; border-radius: 10px; margin: 1px 0; padding: 7px 8px; min-height: 0;
+  transition: color 260ms ease-out, background 160ms ease-out;
+}
+.sidebar-list row:hover { background: alpha(currentColor, 0.06); }
+.sidebar-list row:selected, .sidebar-list row:selected:hover { background: transparent; color: #ffffff; }
+.sidebar-list row label { font-weight: 500; }
+
+.toolbar-title { font-size: 14px; font-weight: 600; margin-left: 10px; transition: opacity 220ms ease-out; }
+.toolbar-title.hidden-title { opacity: 0; }
+.content-header { background: transparent; box-shadow: none; }
+
+/* Page typography */
+.home-title { font-size: 28px; font-weight: 700; letter-spacing: -0.4px; }
+.page-subtitle { font-size: 14px; opacity: 0.62; }
+.section-title { font-size: 15px; font-weight: 600; margin-top: 6px; }
 
 /* Home */
-.home-title { font-size: 26px; font-weight: 700; letter-spacing: -0.3px; }
-.section-title { font-size: 13px; font-weight: 700; opacity: 0.7; }
-
-.mode-tile {
-  background: @card_bg_color;
-  border-radius: 14px;
-  padding: 18px 8px;
-  min-height: 74px;
-  font-weight: 600;
-  box-shadow: 0 1px 3px alpha(#000000, 0.12), 0 0 0 1px alpha(currentColor, 0.05);
-  transition: background 200ms ease-out, box-shadow 220ms ease-out, transform 220ms cubic-bezier(0.3, 1.4, 0.5, 1), color 200ms ease-out;
+.mode-tile, .mode-tile:hover, .mode-tile:checked, .mode-tile:active {
+  background: transparent; box-shadow: none; border-radius: 14px;
+  padding: 18px 8px; min-height: 74px; font-weight: 600;
 }
-.mode-tile:hover { transform: translateY(-2px); box-shadow: 0 8px 20px alpha(#000000, 0.18), 0 0 0 1px alpha(currentColor, 0.05); }
-.mode-tile:active { transform: scale(0.97); }
-.mode-tile:checked {
-  background: @accent_bg_color;
-  color: #ffffff;
-  box-shadow: 0 6px 18px alpha(@accent_bg_color, 0.45);
-}
+.mode-tile:checked { color: #ffffff; }
+.mode-tiles { background: @card_bg_color; border-radius: 16px; padding: 5px; box-shadow: 0 1px 3px alpha(#000000, 0.1), 0 0 0 1px alpha(currentColor, 0.05); }
 
 .home-card {
-  background: @card_bg_color;
-  border-radius: 14px;
-  padding: 12px;
-  box-shadow: 0 1px 3px alpha(#000000, 0.12), 0 0 0 1px alpha(currentColor, 0.05);
-  transition: box-shadow 220ms ease-out, transform 220ms cubic-bezier(0.3, 1.4, 0.5, 1);
+  background: @card_bg_color; border-radius: 16px; padding: 12px;
+  box-shadow: 0 1px 3px alpha(#000000, 0.1), 0 0 0 1px alpha(currentColor, 0.05);
+  transition: box-shadow 300ms cubic-bezier(0.16, 1, 0.3, 1), transform 340ms cubic-bezier(0.34, 1.4, 0.64, 1);
 }
-.home-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px alpha(#000000, 0.16), 0 0 0 1px alpha(currentColor, 0.05); }
+.home-card:hover { transform: translateY(-3px); box-shadow: 0 12px 28px alpha(#000000, 0.16), 0 0 0 1px alpha(currentColor, 0.05); }
 
-.stat-tile { padding: 14px 16px; min-width: 150px; border-radius: 14px; }
+.stat-tile { padding: 14px 16px; min-width: 150px; border-radius: 16px; }
 .warning { color: @warning_color; }
+banner { background: alpha(@accent_bg_color, 0.14); }
