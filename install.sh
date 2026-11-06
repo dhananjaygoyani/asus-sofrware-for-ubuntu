@@ -35,7 +35,7 @@ install -D -m 0755 "$SRC/helper/openarmoury-helper" "$DESTDIR/usr/libexec/openar
 install -D -m 0644 "$SRC/data/org.openarmoury.helper.policy" "$DESTDIR/usr/share/polkit-1/actions/org.openarmoury.helper.policy"
 install -D -m 0644 "$SRC/data/org.openarmoury.App.desktop" "$DESTDIR/usr/share/applications/org.openarmoury.App.desktop"
 rm -f "$DESTDIR/usr/share/icons/hicolor/scalable/apps/org.openarmoury.App.svg"  # from older versions
-for size in 16 24 32 48 64 96 128; do
+for size in 16 24 32 48 64 96 128 256 512; do
     install -D -m 0644 "$SRC/data/icons/$size.png" "$DESTDIR/usr/share/icons/hicolor/${size}x${size}/apps/org.openarmoury.App.png"
 done
 

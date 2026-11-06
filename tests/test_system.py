@@ -110,7 +110,7 @@ def test_demo_never_shares_an_instance_with_the_real_app():
     assert "NON_UNIQUE" in text and "not ctx.is_demo" in text
 
 
-@pytest.mark.parametrize("size", [16, 24, 32, 48, 64, 96, 128])
+@pytest.mark.parametrize("size", [16, 24, 32, 48, 64, 96, 128, 256, 512])
 def test_app_icon_sizes_have_transparent_corners(size):
     image = pytest.importorskip("PIL.Image")
     icon = image.open(SOURCE.parent / "data" / "icons" / f"{size}.png")
@@ -119,7 +119,7 @@ def test_app_icon_sizes_have_transparent_corners(size):
     assert icon.getpixel((size // 2, size // 2))[3] == 255
 
 
-@pytest.mark.parametrize("size", [32, 48, 64, 96, 128])
+@pytest.mark.parametrize("size", [32, 48, 64, 96, 128, 256, 512])
 def test_app_icon_has_no_light_halo(size):
     """A pale fringe from the source's background would show as a halo on a dark panel."""
     image = pytest.importorskip("PIL.Image")
