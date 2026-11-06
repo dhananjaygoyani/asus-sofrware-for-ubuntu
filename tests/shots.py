@@ -278,7 +278,7 @@ def scenario(app):
     switch.set_active(True)
     yield 400
     dialog = window.get_visible_dialog()
-    assert dialog is not None and "freeze" in dialog.get_body(), "GPU warning not shown"
+    assert dialog is not None and "restart" in dialog.get_body(), "GPU warning not shown"
     capture(window, "gate-gpu")
     dialog.close()
     yield 400

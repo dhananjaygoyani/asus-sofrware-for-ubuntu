@@ -156,6 +156,10 @@ class Hardware:
                 return self.read(f"{path}/online") == "0"
         return False
 
+    def gpu_driver_loaded(self):
+        """While this is true the GPU can't safely be turned off: doing so crashed the kernel when tested."""
+        return self.exists("/sys/module/nvidia") or self.exists("/sys/module/nouveau")
+
     def battery_health(self):
         """Current full capacity as a share of its design capacity, and the cycle count."""
         for path in self.batteries():

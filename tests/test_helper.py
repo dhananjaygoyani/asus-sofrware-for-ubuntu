@@ -86,6 +86,16 @@ def test_refused_writes(tree, path, value):
         helper.check_write(path, value)
 
 
+@pytest.mark.parametrize("path", [f"{ARMOURY}/dgpu_disable/current_value", "/sys/devices/platform/asus-nb-wmi/dgpu_disable"])
+def test_gpu_cant_be_turned_off_with_its_driver_loaded(tree, path):
+    helper.check_write(path, "1")  # no driver in the mock tree
+    demo._write(tree, "/sys/module/nvidia/version", "595")
+    with pytest.raises(helper.Refused):
+        helper.do_write(path, "1")
+    assert pathlib.Path(tree + path).read_text().strip() == "0"
+    helper.check_write(path, "0")  # turning it back on is always allowed
+
+
 def test_symlink_out_of_sys_is_refused(tree, tmp_path):
     outside = tmp_path / "secret"
     outside.write_text("keep")

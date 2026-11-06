@@ -80,10 +80,18 @@ def check_armoury(attr, value):
         raise Refused("value outside min/max")
 
 
+def check_gpu_driver(path, value):
+    """Turning the GPU off with its driver loaded crashed the kernel and the display server on a real laptop."""
+    if value == "1" and path.endswith(("/dgpu_disable", "/dgpu_disable/current_value")):
+        if any(os.path.exists(real(f"/sys/module/{driver}")) for driver in ("nvidia", "nouveau")):
+            raise Refused("the GPU's driver is loaded, and turning it off now would crash the system")
+
+
 def check_write(path, value):
     """Refuse unless (path, value) is one of the exact forms the app needs."""
     if not isinstance(path, str) or not isinstance(value, str) or len(path) > 200:
         raise Refused("bad request")
+    check_gpu_driver(path, value)
 
     if path == "/sys/firmware/acpi/platform_profile":
         if not re.fullmatch(r"[a-z][a-z-]{0,31}", value):

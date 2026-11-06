@@ -15,7 +15,6 @@ GPU_ATTRIBUTES = ("dgpu_disable", "gpu_mux_mode", "egpu_enable", "egpu_connected
 POWER_PREFIXES = ("ppt_", "nv_", "apu_mem")
 GPU_WARNINGS = {
     "dgpu_disable": (
-        "Disabling the discrete GPU while its driver is in use can freeze the laptop. Close anything using it first. "
         "The laptop may need a restart, and external displays wired to that GPU will stop working."
     ),
     "gpu_mux_mode": "Changing the GPU mode takes effect after a restart. The internal display may go blank if the "
@@ -233,9 +232,15 @@ class PerformancePage(Page):
         gpu = [a for a in attributes if a["name"] in GPU_ATTRIBUTES]
         power = [a for a in attributes if a["name"].startswith(POWER_PREFIXES)]
         gpu_group = Adw.PreferencesGroup(title="Graphics", description="These changes can blank the screen or need a restart. Each one asks first.")
+        blocked = ctx.hw.gpu_driver_loaded()
         if gpu:
             for attribute in gpu:
-                gpu_group.add(attribute_row(ctx, attribute, GPU_WARNINGS.get(attribute["name"]), self.refresh))
+                if attribute["name"] == "dgpu_disable" and blocked and attribute["value"] != "1":
+                    gpu_group.add(Adw.ActionRow(title="Turn off discrete GPU", subtitle="Unavailable while the GPU's driver is loaded, because it can crash the laptop.", sensitive=False))
+                else:
+                    gpu_group.add(attribute_row(ctx, attribute, GPU_WARNINGS.get(attribute["name"]), self.refresh))
+        elif blocked and ctx.hw.nb_wmi("dgpu_disable") == "0":
+            gpu_group.add(Adw.ActionRow(title="Turn off discrete GPU", subtitle="Unavailable while the GPU's driver is loaded, because it can crash the laptop.", sensitive=False))
         elif ctx.hw.nb_wmi("dgpu_disable") is not None:
             row = Adw.SwitchRow(title="Disable discrete GPU", active=ctx.hw.nb_wmi("dgpu_disable") == "1")
             row.connect("notify::active", lambda r, _p: ctx.submit([ctx.write_op("attr:dgpu_disable", "/sys/devices/platform/asus-nb-wmi/dgpu_disable", "1" if r.get_active() else "0")], warning=GPU_WARNINGS["dgpu_disable"]))
