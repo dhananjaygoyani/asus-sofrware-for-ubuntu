@@ -117,3 +117,17 @@ def test_app_icon_sizes_have_transparent_corners(size):
     assert icon.size == (size, size) and icon.mode == "RGBA"
     assert icon.getpixel((0, 0))[3] == 0 and icon.getpixel((size - 1, size - 1))[3] == 0
     assert icon.getpixel((size // 2, size // 2))[3] == 255
+
+
+@pytest.mark.parametrize("size", [32, 48, 64, 96, 128])
+def test_app_icon_has_no_light_halo(size):
+    """A pale fringe from the source's background would show as a halo on a dark panel."""
+    image = pytest.importorskip("PIL.Image")
+    icon = image.open(SOURCE.parent / "data" / "icons" / f"{size}.png")
+    # Compare both edges: a mask off-centre would leave one side bright.
+    for x, y in ((size - 1, size // 2), (0, size // 2), (size // 2, size - 1), (size // 2, 0)):
+        for step in range(max(2, size // 16)):
+            dx = -step if x == size - 1 else step if x == 0 else 0
+            dy = -step if y == size - 1 else step if y == 0 else 0
+            r, g, b, a = icon.getpixel((x + dx, y + dy))
+            assert a == 0 or min(r, g, b) < 215, (x + dx, y + dy, r, g, b, a)

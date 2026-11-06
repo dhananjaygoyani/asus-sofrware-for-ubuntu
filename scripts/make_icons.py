@@ -9,7 +9,7 @@ import sys
 from PIL import Image, ImageChops, ImageDraw
 
 SIZES = (16, 24, 32, 48, 64, 96, 128)
-LIGHT = 40  # how far from the background a pixel must be to count as part of the icon
+LIGHT = 110  # how far from the background a pixel must be to count as the icon, which skips its soft shadow
 CORNER = 0.235  # corner radius as a share of the icon's width
 SUPERSAMPLE = 4
 
@@ -24,11 +24,12 @@ def icon_bounds(image):
 def cut_out(image):
     left, top, right, bottom = icon_bounds(image)
     side = max(right - left, bottom - top)
-    square = image.crop((left, top, left + side, top + side)).convert("RGBA")
-    # Inset slightly, so no light background shows along the curved edge.
+    # The artwork isn't exactly square. Crop to its true shape, then square it, so no background is included.
+    square = image.crop((left, top, right, bottom)).resize((side, side), Image.LANCZOS).convert("RGBA")
+    # Inset a little, so no light background shows along the curved edge.
     large = side * SUPERSAMPLE
     mask = Image.new("L", (large, large), 0)
-    inset = SUPERSAMPLE
+    inset = 2 * SUPERSAMPLE
     ImageDraw.Draw(mask).rounded_rectangle((inset, inset, large - inset - 1, large - inset - 1), radius=int(large * CORNER), fill=255)
     square.putalpha(mask.resize((side, side), Image.LANCZOS))
     return square
@@ -39,7 +40,10 @@ def main():
     icon = cut_out(source)
     output.mkdir(parents=True, exist_ok=True)
     for size in SIZES:
-        icon.resize((size, size), Image.LANCZOS).save(output / f"{size}.png")
+        # Premultiplied, so see-through pixels can't bleed their colour into the edge when scaled.
+        scaled = icon.convert("RGBa").resize((size, size), Image.LANCZOS).convert("RGBA")
+        scaled.putalpha(scaled.getchannel("A").point(lambda a: 0 if a < 8 else a))
+        scaled.save(output / f"{size}.png")
     print("source", source.size, "icon", icon.size)
 
 
