@@ -2,6 +2,7 @@
 import os
 import pathlib
 import shutil
+import subprocess
 
 import pytest
 
@@ -155,3 +156,16 @@ def test_gpu_switch_without_prime_select_stays_blocked_while_loaded(hw):
     assert hw.gpu_switch_state() == "blocked"
     shutil.rmtree(hw.root + "/sys/module/nvidia")
     assert hw.gpu_switch_state() == "ready"
+
+
+@pytest.mark.skipif(not shutil.which("dpkg-deb"), reason="needs dpkg-deb")
+def test_package_contents():
+    root = SOURCE.parent
+    built = subprocess.run([str(root / "scripts" / "build_deb.sh")], capture_output=True, text=True, check=True).stdout.strip()
+    listing = subprocess.run(["dpkg-deb", "--contents", built], capture_output=True, text=True, check=True).stdout
+    for needed in ("./usr/bin/openarmoury", "./usr/libexec/openarmoury/openarmoury-helper", "org.openarmoury.helper.policy", "ui/theme.css", "asusctl/LICENSE", "512x512/apps/org.openarmoury.App.png"):
+        assert needed in listing, needed
+    assert "udev" not in listing and "__pycache__" not in listing
+    assert not [line for line in listing.splitlines() if line[5] == "w" or line[8] == "w"], "group or world writable"
+    helper_line = next(line for line in listing.splitlines() if line.endswith("openarmoury-helper") and line.startswith("-"))
+    assert helper_line.startswith("-rwxr-xr-x root/root")

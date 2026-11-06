@@ -1,96 +1,123 @@
-# OpenArmoury
+<p align="center"><img src="data/icons/128.png" alt="OpenArmoury logo" width="128"></p>
 
-A native Ubuntu app for ASUS gaming laptops: performance profiles, fan curves, battery charge limit and keyboard
-lighting. It's an independent project, not made by or affiliated with ASUS.
+<h1 align="center">OpenArmoury</h1>
+
+<p align="center">A native Ubuntu control centre for ASUS gaming laptops.</p>
+
+ASUS's Armoury Crate and Aura Creator only run on Windows. OpenArmoury brings their useful laptop controls to Linux:
+performance modes, fan curves, battery limits and keyboard lighting, in one app.
 
 It works out what your laptop can do when it starts, from what the kernel and keyboard report, rather than from a
-list of supported models.
+fixed list of supported models.
 
-![Home page](docs/home.png)
+> OpenArmoury is an independent project. It isn't made by, or affiliated with, ASUS. Armoury Crate and Aura are ASUS
+> names, used here only to describe what this project is an alternative to.
 
-## Try it safely
-
-Demo mode runs against a simulated laptop and can't touch your hardware or saved settings:
-
-```sh
-python3 -m openarmoury --demo
-```
+![OpenArmoury's Home page, with mode tiles and live gauges](docs/home.png)
 
 ## Install
 
-Needs Ubuntu 24.04 or newer with `python3-gi`, `gir1.2-gtk-4.0` and `gir1.2-adw-1`. Nothing is downloaded.
+You need Ubuntu 24.04 or newer, with GNOME for the full feature set.
+
+1. Download `openarmoury_0.1.0_all.deb` from this repo's Releases page.
+2. In the folder where you saved it, run:
+
+   ```sh
+   sudo apt install ./openarmoury_0.1.0_all.deb
+   ```
+
+3. Open **OpenArmoury** from your apps.
+
+To remove it, run `sudo apt remove openarmoury`. Your settings stay in `~/.config/openarmoury` until you delete them.
+
+### Try it without changing anything
+
+Demo mode runs on a simulated laptop, and can't touch your hardware or settings:
 
 ```sh
-sudo ./install.sh                # or: sudo ./install.sh --no-uaccess
-sudo ./uninstall.sh              # removes everything except your settings
+openarmoury --demo
 ```
 
-### The `--no-uaccess` choice
+### Other ways to install
 
-The default install adds a udev rule so that lighting works without a password. That rule also lets programs
-running as you read raw key reports from the keyboard. With `--no-uaccess` lighting goes through the root helper
-instead, and asks for your password once a session.
+To build the package yourself, run `scripts/build_deb.sh`, and the file appears in `dist/`.
 
-## Pages
+To install directly from a copy of this repo, run `sudo ./install.sh --no-uaccess`. Without `--no-uaccess`, it also
+adds a rule that lets lighting work without a password, but that rule lets programs running as you read raw key
+presses from the keyboard. The package leaves this rule out. Use `sudo ./uninstall.sh` to remove this kind of install.
 
-| Page | What it does |
+## Features
+
+| Page | What you can do |
 |---|---|
-| Home | Operating mode tiles, live gauges for temperature, load, memory and fans, and status |
-| Performance | Profile, GPU settings with warnings, and power limits with the kernel's own min and max |
-| Fans | Drag-to-edit curves with 8 points per fan, re-applied when you return to a profile |
-| Lighting | Built-in effects, colour, speed, direction, zones, brightness, and boot/sleep lighting, with an animated preview |
-| Light Studio | Painting, a keyframe editor, sensor-driven and music-reactive lighting, and presets |
-| Scenarios | Settings per game or program, plugged-in and battery rules, and a game library |
-| Monitor | Live CPU, memory, disk, network and power, GPU state without waking it, and closing large programs |
-| Macros | Record keys, then play them back from a button or a keyboard shortcut |
-| System | Battery care, touchpad, Win key, microphone, refresh rate, night light, ROG key, background running, and backups |
+| **Home** | Switch operating mode, and see live temperature, load, memory and fan dials |
+| **Performance** | Choose a profile, turn off the discrete GPU in safe steps, and set power limits where the kernel offers them |
+| **Fans** | Drag 8 points per fan to shape a curve, or start from Quiet, Balanced, Cool or Full speed |
+| **Lighting** | Set effects, colour, speed, direction, zones and brightness, and choose when the lights stay on |
+| **Light Studio** | Paint keys or zones, build keyframe animations, and link colour to temperature, load, battery or music |
+| **Scenarios** | Change settings per game or program, set plugged-in and battery rules, and launch games |
+| **Monitor** | Watch CPU, memory, disk, network and power, plus NVIDIA readings, and close large programs |
+| **Macros** | Record keys, then replay them from a button or keyboard shortcut |
+| **System** | Set battery care limits, touchpad, Win key, microphone, refresh rate and night light, and back up your settings |
 
-[docs/features.md](docs/features.md) compares every Armoury Crate feature, including what isn't built and why.
+Light and dark themes follow your system. [docs/features.md](docs/features.md) compares every Armoury Crate feature,
+including what isn't built and why.
+
+![Light Studio, with a lit keyboard preview](docs/studio.png)
 
 ## How it stays safe
 
-- **You see every first write.** The first time the app makes a kind of change, it shows the exact file or packet
-  and waits for you. Anything unproven says why.
-- **One small root helper.** It starts through `pkexec`, allows only exact paths and value patterns, and only talks
-  to hidraw devices with the ASUS vendor ID. Firmware-style commands are refused.
-- **Nothing is saved to the keyboard unless you ask.** Animations send only non-persistent colour packets, at no
-  more than 15 frames a second.
-- **A sleeping GPU stays asleep.** `nvidia-smi` is only asked when the GPU is already awake, and rarely enough when idle that it can go back to sleep.
+- **You see every first change.** The first time the app makes a kind of change, it shows the exact file or packet and
+  waits for your OK. Anything unproven says why.
+- **One small root helper.** It starts through `pkexec` and allows only exact paths and values. It talks only to
+  hidraw devices with the ASUS vendor ID, and refuses firmware-style commands.
+- **Nothing is saved to the keyboard unless you ask.** Animations send only temporary colour packets, at up to 15
+  frames a second.
+- **A sleeping GPU stays asleep.** `nvidia-smi` runs only when the GPU is already awake, and rarely enough when idle
+  that it can go back to sleep.
+- **The GPU can't be switched off with its driver loaded.** That crashed the kernel when tested, so both the app and
+  the helper refuse it.
 
-## Verified vs untested
+## What's been tested
 
-Tested on one machine: ROG Strix G513QC, BIOS 331, kernel 7.0, Ubuntu 24.04.5.
+Everything was tested on one laptop: a ROG Strix G513QC with BIOS 331, kernel 7.0 and Ubuntu 24.04.5.
 
 | Status | What |
 |---|---|
-| **Tested automatically** | HID descriptor parser using this laptop's real descriptor; helper whitelist; packet layouts; restore rules (`pytest`) |
-| **Tested on the mock laptop** | Every page, helper writes, the approval dialog, the live-lighting rate limit, scenarios, macros and power states (`tests/shots.py`, under Xvfb) |
-| **Checked on the real laptop, read-only** | Model, sensors, fans, curves, profiles, attributes, keyboard interface, GPU state, refresh rates and battery health read correctly (`tests/real_readonly.py`) |
-| **Tested on the real laptop, with settings restored** | Profiles, charge limit, brightness, boot sound, panel overdrive, fan curves, the keyboard query, effects, zone and live colour commands, macro playback, NVIDIA readings, touchpad, Win key, microphone, night light, ROG shortcut, refresh rate and the audio reader (`tests/real_write_check.py`) |
-| **Sent, but only your eyes can confirm** | Whether each lighting effect and zone looks right on the keyboard |
-| **Tested and found unsafe** | Turning off the GPU with its driver loaded crashed the kernel and the display server. The app and helper refuse it |
-| **Not yet tested on real hardware** | The two-step way to turn off the GPU: stopping the driver through `prime-select`, restarting, then the switch |
-| **Accepted, but the effect isn't confirmed** | Saving to keyboard flash, which needs a restart to confirm, and boot and sleep lighting, which needs a restart and a sleep to confirm |
-| **Unproven protocol details** | Which packet saves to flash; direct colour on this model; zone numbers; see [docs/protocol.md](docs/protocol.md) |
-| **Other ASUS laptops** | Untested. Model data comes from asusctl, and detection is designed to fall back to fewer features |
+| ✅ **Works on the real laptop** | Profiles, charge limit, brightness, boot sound, panel overdrive, fan curves, keyboard effects, zone and live colour, macros, NVIDIA readings, touchpad, Win key, microphone, night light, refresh rate, scenarios, plugged-in rules, running in the background, and music lighting |
+| ⚠️ **Sent, but the result isn't confirmed** | Saving an effect to keyboard memory, and boot and sleep lighting |
+| ⚠️ **Not tested on a real laptop** | The two-step way to turn off the GPU, battery rules, and the game library, which has only seen a demo entry and a sample Steam game |
+| ❌ **Found unsafe, so blocked** | Turning off the GPU while its driver is loaded |
+| ❓ **Other ASUS laptops** | Untested. The app is designed to fall back to fewer features, but expect rough edges |
+
+Reports from other models are very welcome.
 
 ### Known limits
 
-- Per-key painting needs a key layout. asusctl provides 18. A per-key model without one gets everything else, but
-  no key painting.
-- Lighting power states (boot and sleep) on older keyboards come from asusctl only, so they show a warning first.
-- The Win key setting only stops Activities opening. Win+ shortcuts still work.
-- Refresh rate control needs GNOME. Scenarios and battery rules need the app running, or "Keep running" on.
-- Macros play through the root helper, so they may ask for your password. They're stored as plain text.
-- Restoring at login asks for your password if it has to change anything besides lighting. Software effects
-  from Light Studio need the app running.
-- CPU power limits show as unavailable where the kernel has no limits for your model, which includes the G513QC.
+- Per-key painting needs a key layout, and 18 are included. A per-key laptop without one gets everything else.
+- The Win key setting stops Activities opening, but Win+ shortcuts still work.
+- Refresh rate, touchpad, Win key, night light and shortcuts need GNOME.
+- Scenarios and rules need the app running, or **Keep running** turned on in System.
+- Restoring settings at login asks for your password unless lighting is all that's saved.
+- If you turn off the GPU, it also stays off in Windows until you turn it back on from the app.
+
+## How this was built
+
+1. **Surveyed the hardware** using read-only commands: [docs/hardware.md](docs/hardware.md).
+2. **Studied the protocol** through static analysis of Armoury Crate's installed files, for interoperability, and
+   cross-checked each fact against [asusctl](https://github.com/opengamingcollective/asusctl) and the Linux kernel
+   drivers: [docs/protocol.md](docs/protocol.md). No ASUS code or assets are in this project.
+3. **Built the app** in Python with GTK4 and libadwaita. It uses kernel interfaces wherever they exist, and hidraw
+   only for keyboard lighting.
+4. **Tested it** on a simulated laptop first, then on real hardware, restoring settings afterwards.
 
 ## Development
 
 ```sh
-python3 -m pytest tests
-xvfb-run -a -s "-screen 0 1280x900x24" env GSK_RENDERER=cairo python3 tests/shots.py /tmp/openarmoury-shots
+python3 -m pytest tests                        # logic and the helper's safety rules
+xvfb-run -a -s "-screen 0 1280x900x24" env GSK_RENDERER=cairo python3 tests/shots.py /tmp/openarmoury-shots   # every page, on the simulated laptop
+python3 tests/real_write_check.py              # real writes on your laptop, then restores them
+scripts/build_deb.sh                           # builds the package
 ```
 
 ## Licence and credits
@@ -99,7 +126,6 @@ Keyboard layouts and the model table in `openarmoury/data/asusctl/` are converte
 [asusctl](https://github.com/opengamingcollective/asusctl) and stay under the Mozilla Public License 2.0, with the
 licence alongside them. `scripts/import_asusctl.py` regenerates them.
 
-The app icon was generated with Gemini. Check Google's terms for AI-generated images before publishing it.
-`scripts/make_icons.py` rebuilds the sizes from `data/icons/source.jpeg`.
+The app icon was generated with Gemini. `scripts/make_icons.py` rebuilds its sizes from `data/icons/source.jpeg`.
 
 The rest of the project has no licence chosen yet.
