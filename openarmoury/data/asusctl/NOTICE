@@ -1,0 +1,3 @@
+support.json, layouts.json and led_map.json are converted from asusctl
+(https://github.com/opengamingcollective/asusctl, commit 5133a5d).
+They remain under the Mozilla Public License 2.0; see LICENSE in this folder.

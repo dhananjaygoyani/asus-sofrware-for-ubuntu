@@ -1,0 +1,3129 @@
+[
+{
+"device": "FA506I",
+"product": "",
+"layout": "fa506i",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FA506N",
+"product": "",
+"layout": "fa506i",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FA506Q",
+"product": "",
+"layout": "fa506i",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FA507",
+"product": "",
+"layout": "fa507",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FA608PM",
+"product": "",
+"layout": "fa608",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FA608UH",
+"product": "",
+"layout": "fa608",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse",
+"Flash"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FA608WI",
+"product": "",
+"layout": "fa608",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FA608WV",
+"product": "",
+"layout": "fa608",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FA617NS",
+"product": "",
+"layout": "fa507",
+"modes": [
+"Static",
+"Breathe",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FA617NT",
+"product": "",
+"layout": "fa507",
+"modes": [
+"Static",
+"Breathe",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FA617XS",
+"product": "",
+"layout": "fa507",
+"modes": [
+"Static",
+"Breathe",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FA617XT",
+"product": "",
+"layout": "fa507",
+"modes": [
+"Static",
+"Breathe",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FA707NU",
+"product": "",
+"layout": "fa507",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FX505",
+"product": "",
+"layout": "fx505d",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FX506",
+"product": "",
+"layout": "fa506i",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FX507VU",
+"product": "",
+"layout": "fa507",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FX507VV",
+"product": "",
+"layout": "fa506i",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FX507Z",
+"product": "",
+"layout": "fa506i",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FX516P",
+"product": "",
+"layout": "fa506i",
+"modes": [
+"Static",
+"Breathe",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FX517Z",
+"product": "",
+"layout": "fa506i",
+"modes": [
+"Static",
+"Breathe",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FX607J",
+"product": "",
+"layout": "fa506i",
+"modes": [
+"Static",
+"Breathe",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FX607V",
+"product": "",
+"layout": "fa506i",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"Pulse"
+],
+"zones": [],
+"advanced": "zone",
+"advanced_zones": [
+"SingleZone"
+],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FX608JH",
+"product": "",
+"layout": "fa506i",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"Pulse"
+],
+"zones": [],
+"advanced": "zone",
+"advanced_zones": [
+"SingleZone"
+],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FX608JM",
+"product": "",
+"layout": "fa506i",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"Pulse"
+],
+"zones": [],
+"advanced": "zone",
+"advanced_zones": [
+"SingleZone"
+],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FX608JP",
+"product": "",
+"layout": "fa506i",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"Pulse"
+],
+"zones": [],
+"advanced": "zone",
+"advanced_zones": [
+"SingleZone"
+],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FX617X",
+"product": "",
+"layout": "fa506i",
+"modes": [
+"Static",
+"Breathe",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FX705D",
+"product": "",
+"layout": "fx505d",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "FX706H",
+"product": "",
+"layout": "fx505d",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "G512L",
+"product": "",
+"layout": "g512",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G513I",
+"product": "",
+"layout": "g513i",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "zone",
+"advanced_zones": [
+"ZonedKbLeft",
+"ZonedKbLeftMid",
+"ZonedKbRightMid",
+"ZonedKbRight",
+"LightbarRight",
+"LightbarRightCorner",
+"LightbarRightBottom",
+"LightbarLeftBottom",
+"LightbarLeftCorner",
+"LightbarLeft"
+],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G513Q",
+"product": "",
+"layout": "g513i",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G513QR",
+"product": "",
+"layout": "g513i-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G513R",
+"product": "",
+"layout": "g513i-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G513RC",
+"product": "",
+"layout": "g513i",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "zone",
+"advanced_zones": [
+"ZonedKbLeft",
+"ZonedKbLeftMid",
+"ZonedKbRightMid",
+"ZonedKbRight",
+"LightbarRight",
+"LightbarRightCorner",
+"LightbarRightBottom",
+"LightbarLeftBottom",
+"LightbarLeftCorner",
+"LightbarLeft"
+],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G513RW",
+"product": "",
+"layout": "g513i-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G531G",
+"product": "",
+"layout": "gx502",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G531GW",
+"product": "",
+"layout": "gx502",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "G532",
+"product": "",
+"layout": "gx502",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "G533Q",
+"product": "1866",
+"layout": "g533q-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G533QS",
+"product": "18c6",
+"layout": "g533q-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G533Z",
+"product": "",
+"layout": "g533q-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "G614FM",
+"product": "19b6",
+"layout": "g634j-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar",
+"Logo"
+]
+},
+{
+"device": "G614FP",
+"product": "19b6",
+"layout": "g634j-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G614FR",
+"product": "",
+"layout": "g634j-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar",
+"Logo"
+]
+},
+{
+"device": "G614J",
+"product": "",
+"layout": "g634j-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G614JI",
+"product": "",
+"layout": "g634j-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar",
+"Logo"
+]
+},
+{
+"device": "G614JIR",
+"product": "",
+"layout": "g513i-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G614JJ",
+"product": "",
+"layout": "g634j-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G614JU",
+"product": "",
+"layout": "g634j-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar",
+"Logo"
+]
+},
+{
+"device": "G614JZ",
+"product": "",
+"layout": "g634j-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G614PH",
+"product": "19b6",
+"layout": "g634j-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G614PM",
+"product": "19b6",
+"layout": "g634j-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar",
+"Logo"
+]
+},
+{
+"device": "G614PP",
+"product": "19b6",
+"layout": "g634j-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G614PR",
+"product": "",
+"layout": "g614pr-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G614PW",
+"product": "",
+"layout": "g634j-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G615JHR",
+"product": "",
+"layout": "g634j-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar",
+"Logo"
+]
+},
+{
+"device": "G615JM",
+"product": "",
+"layout": "g634j-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G615LM",
+"product": "19b6",
+"layout": "g634j-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G615LP",
+"product": "",
+"layout": "g634j-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar",
+"Logo"
+]
+},
+{
+"device": "G615LR",
+"product": "",
+"layout": "g634j-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G615LW",
+"product": "",
+"layout": "g634j-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G634J",
+"product": "",
+"layout": "g634j-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar",
+"Logo",
+"RearGlow"
+]
+},
+{
+"device": "G635L",
+"product": "",
+"layout": "g635l-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar",
+"Logo"
+]
+},
+{
+"device": "G712LI",
+"product": "",
+"layout": "gl503",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G712LV",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G712LW",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G713IC",
+"product": "",
+"layout": "gx502",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G713P",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G713PI",
+"product": "",
+"layout": "g733pz-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G713QC",
+"product": "",
+"layout": "gx502",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G713QE",
+"product": "",
+"layout": "gx502",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G713QM",
+"product": "",
+"layout": "gx502",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G713QR",
+"product": "",
+"layout": "gx502",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G713RC",
+"product": "",
+"layout": "gx502",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "zone",
+"advanced_zones": [
+"ZonedKbLeft",
+"ZonedKbLeftMid",
+"ZonedKbRightMid",
+"ZonedKbRight",
+"LightbarRight",
+"LightbarRightCorner",
+"LightbarRightBottom",
+"LightbarLeftBottom",
+"LightbarLeftCorner",
+"LightbarLeft"
+],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G713RM",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "G713RS",
+"product": "",
+"layout": "gx502",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G713RW",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4",
+"BarLeft",
+"BarRight"
+],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G731",
+"product": "",
+"layout": "g533q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "G731G",
+"product": "",
+"layout": "g533q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "G731GV",
+"product": "",
+"layout": "g533q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "G731GW",
+"product": "",
+"layout": "g533q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "G733C",
+"product": "",
+"layout": "g513i-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar",
+"Logo",
+"Lid"
+]
+},
+{
+"device": "G733P",
+"product": "",
+"layout": "g733pz-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G733Q",
+"product": "",
+"layout": "gx502",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "G733QS",
+"product": "",
+"layout": "g513i-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar",
+"Logo",
+"Lid"
+]
+},
+{
+"device": "G733Z",
+"product": "",
+"layout": "g513i-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar",
+"Logo",
+"Lid"
+]
+},
+{
+"device": "G814J",
+"product": "",
+"layout": "g814ji-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G815L",
+"product": "",
+"layout": "g814ji-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "G834J",
+"product": "",
+"layout": "g814ji-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar",
+"Logo",
+"RearGlow"
+]
+},
+{
+"device": "G835L",
+"product": "",
+"layout": "g814ji-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar",
+"Logo"
+]
+},
+{
+"device": "GA401I",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GA401Q",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GA402N",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GA402NU-0002",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GA402R",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GA402X",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GA402XV-NC012",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GA403U",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GA403UM",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GA403UV",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GA403WR",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GA403WW",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GA503Q",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GA503QE",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GA503R",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GA605W",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "zone",
+"advanced_zones": [
+"SingleZone"
+],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GL503",
+"product": "",
+"layout": "gl503",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GL503V",
+"product": "",
+"layout": "gl503",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GL504G",
+"product": "",
+"layout": "gl503",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4",
+"Logo",
+"BarLeft",
+"BarRight"
+],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GL531",
+"product": "",
+"layout": "g512",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GL553V",
+"product": "",
+"layout": "g533q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GL703G",
+"product": "",
+"layout": "gl503",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GL704GM",
+"product": "",
+"layout": "gl503",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar",
+"RearGlow"
+]
+},
+{
+"device": "GM501G",
+"product": "",
+"layout": "fa507",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GU502GU",
+"product": "",
+"layout": "gx502",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GU502GV",
+"product": "",
+"layout": "gx502",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GU502L",
+"product": "",
+"layout": "gx502",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GU603H",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "zone",
+"advanced_zones": [
+"SingleZone"
+],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GU603V",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "zone",
+"advanced_zones": [
+"SingleZone"
+],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GU603Z",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "zone",
+"advanced_zones": [
+"SingleZone"
+],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GU604V",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "zone",
+"advanced_zones": [
+"SingleZone"
+],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GU605C",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "zone",
+"advanced_zones": [
+"SingleZone"
+],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GU605M",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "zone",
+"advanced_zones": [
+"SingleZone"
+],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GU606",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "zone",
+"advanced_zones": [
+"SingleZone"
+],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GV301Q",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GV301V",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GV302X",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GV601R",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GV601V",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"Pulse"
+],
+"zones": [],
+"advanced": "zone",
+"advanced_zones": [
+"SingleZone"
+],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GV604V",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GX502",
+"product": "",
+"layout": "gx502",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GX531",
+"product": "",
+"layout": "gx531-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [
+"Key1",
+"Key2",
+"Key3",
+"Key4"
+],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GX550L",
+"product": "",
+"layout": "gx531-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GX551Q",
+"product": "",
+"layout": "gx531-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GX650P",
+"product": "",
+"layout": "gx531-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GX650R",
+"product": "",
+"layout": "gx531-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard",
+"Lightbar"
+]
+},
+{
+"device": "GX651AR",
+"product": "1ce6",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GX701",
+"product": "",
+"layout": "gx531-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "per-key",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GX703H",
+"product": "",
+"layout": "gx531-per-key",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Star",
+"Rain",
+"Highlight",
+"Laser",
+"Ripple",
+"Pulse",
+"Comet",
+"Flash"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GZ301V",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GZ301Z",
+"product": "1a30",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "GZ302",
+"product": "1a30",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Keyboard"
+]
+},
+{
+"device": "RC71L",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Ally"
+]
+},
+{
+"device": "RC72L",
+"product": "",
+"layout": "ga401q",
+"modes": [
+"Static",
+"Breathe",
+"RainbowCycle",
+"RainbowWave",
+"Pulse"
+],
+"zones": [],
+"advanced": "none",
+"advanced_zones": [],
+"power_zones": [
+"Ally"
+]
+}
+]

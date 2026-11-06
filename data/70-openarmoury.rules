@@ -1,0 +1,4 @@
+# Lets the person at the seat send lighting packets to ASUS keyboards without a password.
+# This also lets programs running as that person read raw key reports from the keyboard.
+# Install with --no-uaccess to leave this out; lighting then goes through the helper.
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0b05", TAG+="uaccess"

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=OpenArmoury
+Comment=Performance, fans, battery and keyboard lighting
+Exec=openarmoury
+Icon=org.openarmoury.App
+Terminal=false
+Categories=Settings;HardwareSettings;
+Keywords=fan;keyboard;lighting;battery;performance;

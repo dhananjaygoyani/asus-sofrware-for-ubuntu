@@ -1,0 +1,90 @@
+# OpenArmoury
+
+A native Ubuntu app for ASUS gaming laptops: performance profiles, fan curves, battery charge limit and keyboard
+lighting. It's an independent project, not made by or affiliated with ASUS.
+
+It works out what your laptop can do when it starts, from what the kernel and keyboard report, rather than from a
+list of supported models.
+
+![Lighting page](docs/screenshots/lighting-detected.png)
+
+## Try it safely
+
+Demo mode runs against a simulated laptop and can't touch your hardware or saved settings:
+
+```sh
+python3 -m openarmoury --demo
+```
+
+## Install
+
+Needs Ubuntu 24.04 or newer with `python3-gi`, `gir1.2-gtk-4.0` and `gir1.2-adw-1`. Nothing is downloaded.
+
+```sh
+sudo ./install.sh                # or: sudo ./install.sh --no-uaccess
+sudo ./uninstall.sh              # removes everything except your settings
+```
+
+### The `--no-uaccess` choice
+
+The default install adds a udev rule so that lighting works without a password. That rule also lets programs
+running as you read raw key reports from the keyboard. With `--no-uaccess` lighting goes through the root helper
+instead, and asks for your password once a session.
+
+## Pages
+
+| Page | What it does |
+|---|---|
+| Dashboard | Temperatures, fan speeds, battery, profile and keyboard type |
+| Performance | Profile, GPU settings with warnings, and power limits with the kernel's own min and max |
+| Fans | Drag-to-edit curves with 8 points per fan, re-applied when you return to a profile |
+| Lighting | Built-in effects, colour, speed, direction, zones and brightness, with an animated preview |
+| Light Studio | Painting, a keyframe editor, a CPU-temperature mode and presets |
+| System | Charge limit, other firmware settings, and restoring settings at login |
+
+## How it stays safe
+
+- **You see every first write.** The first time the app makes a kind of change, it shows the exact file or packet
+  and waits for you. Anything unproven says why.
+- **One small root helper.** It starts through `pkexec`, allows only exact paths and value patterns, and only talks
+  to hidraw devices with the ASUS vendor ID. Firmware-style commands are refused.
+- **Nothing is saved to the keyboard unless you ask.** Animations send only non-persistent colour packets, at no
+  more than 15 frames a second.
+- **The discrete GPU is left alone.** `nvidia-smi` is never called and its sensors are never read, so it isn't woken.
+
+## Verified vs untested
+
+Tested on one machine: ROG Strix G513QC, BIOS 331, kernel 7.0, Ubuntu 24.04.5.
+
+| Status | What |
+|---|---|
+| **Tested automatically** | HID descriptor parser using this laptop's real descriptor; helper whitelist; packet layouts; restore rules (`pytest`) |
+| **Tested on the mock laptop** | Every page, helper writes, the approval dialog, the live-lighting rate limit (`tests/shots.py`, under Xvfb) |
+| **Checked on the real laptop, read-only** | Model, sensors, fans, curves, profiles, attributes and keyboard interface are read correctly (`tests/real_readonly.py`) |
+| **Not yet tested on real hardware** | **Every write:** profiles, fan curves, charge limit, GPU settings, lighting, the keyboard query, `install.sh` and pkexec |
+| **Unproven protocol details** | Which packet saves to flash; direct colour on this model; zone numbers; see [docs/protocol.md](docs/protocol.md) |
+| **Other ASUS laptops** | Untested. Model data comes from asusctl, and detection is designed to fall back to fewer features |
+
+### Known limits
+
+- Per-key painting needs a key layout. asusctl provides 18. A per-key model without one gets everything else, but
+  no key painting.
+- Lighting power states (boot and sleep) aren't offered, because they're unproven.
+- Restoring at login asks for your password if it has to change anything besides lighting. Software effects
+  from Light Studio need the app running.
+- CPU power limits show as unavailable where the kernel has no limits for your model, which includes the G513QC.
+
+## Development
+
+```sh
+python3 -m pytest tests
+xvfb-run -a -s "-screen 0 1280x900x24" env GSK_RENDERER=cairo python3 tests/shots.py docs/screenshots
+```
+
+## Licence and credits
+
+Keyboard layouts and the model table in `openarmoury/data/asusctl/` are converted from
+[asusctl](https://github.com/opengamingcollective/asusctl) and stay under the Mozilla Public License 2.0, with the
+licence alongside them. `scripts/import_asusctl.py` regenerates them.
+
+The rest of the project has no licence chosen yet.

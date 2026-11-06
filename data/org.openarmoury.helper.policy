@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <vendor>OpenArmoury</vendor>
+  <action id="org.openarmoury.helper">
+    <description>Change laptop settings</description>
+    <message>OpenArmoury needs permission to change fan, power, battery and lighting settings.</message>
+    <icon_name>org.openarmoury.App</icon_name>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/libexec/openarmoury/openarmoury-helper</annotate>
+  </action>
+</policyconfig>
