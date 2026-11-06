@@ -53,7 +53,6 @@ class Context:
         self.live_effect = None
         self.frame_busy = False
         self.limiter = effects.RateLimiter()
-        self.direct_started = False
         self.save_source = None
 
     @property
@@ -178,7 +177,9 @@ class Context:
         dialog.connect("response", respond)
         dialog.present(self.window)
 
-    def _run(self, ops, done):
+    def _send(self, ops, finished):
+        """Run operations off the UI thread, then call finished(error) back on it."""
+
         def work():
             try:
                 for op in ops:
@@ -187,10 +188,10 @@ class Context:
             except (WriteError, OSError) as err:
                 return str(err)
 
-        def finished(future):
-            GLib.idle_add(self._finish, future.result(), done)
+        self.executor.submit(work).add_done_callback(lambda future: GLib.idle_add(finished, future.result()))
 
-        self.executor.submit(work).add_done_callback(finished)
+    def _run(self, ops, done):
+        self._send(ops, lambda error: self._finish(error, done))
 
     def _finish(self, error, done):
         if error:
@@ -213,7 +214,6 @@ class Context:
         def started(ok):
             if ok:
                 self.live_effect = effect
-                self.direct_started = True
             if done:
                 done(ok)
 
@@ -221,7 +221,6 @@ class Context:
 
     def stop_live(self):
         self.live_effect = None
-        self.direct_started = False
 
     def _frame_ops(self, frame, first=False, uncertain=None):
         board = self.board
@@ -244,20 +243,7 @@ class Context:
             return
         frame = self.render(self.live_effect, now)
         self.frame_busy = True
-        ops = self._frame_ops(frame)
-
-        def work():
-            try:
-                for op in ops:
-                    op.call()
-                return None
-            except (WriteError, OSError) as err:
-                return str(err)
-
-        def finished(future):
-            GLib.idle_add(self._frame_done, future.result())
-
-        self.executor.submit(work).add_done_callback(finished)
+        self._send(self._frame_ops(frame), self._frame_done)
 
     def _frame_done(self, error):
         self.frame_busy = False

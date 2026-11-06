@@ -1,11 +1,11 @@
 """Monitor, Scenarios and Macros pages."""
 import os
-import re
 import signal
 
 from gi.repository import Adw, Gio, GLib, Gtk
 
 from .. import games, monitor
+from ..restore import macro_slug
 from . import design
 from .context import Op
 from .pages import PROFILE_LABELS, Page
@@ -163,7 +163,6 @@ class ScenariosPage(Page):
         self._rebuild()
 
         self.library = Adw.PreferencesGroup(title="Game library", description="Steam games and apps your desktop lists as games.")
-        self.library_rows = []
         page.add(self.library)
         self._load_games()
 
@@ -259,7 +258,6 @@ class ScenariosPage(Page):
             entry = {
                 "name": name.get_text().strip(),
                 "match": match.get_text().strip(),
-                "enabled": True,
                 "profile": self.profiles[profile.get_selected() - 1][0] if profile.get_selected() else None,
                 "brightness": self.levels[brightness.get_selected() - 1][0] if brightness.get_selected() else None,
                 "touchpad": False if touchpad.get_active() else None,
@@ -285,10 +283,6 @@ class ScenariosPage(Page):
         dialog.present(self.ctx.window)
 
 
-def slug_for(name):
-    return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")[:32]
-
-
 class MacrosPage(Page):
     title = "Macros"
     icon = "input-keyboard-symbolic"
@@ -312,7 +306,7 @@ class MacrosPage(Page):
             self.group.remove(row)
         self.rows = []
         for name, macro in self.ctx.config["macros"].items():
-            row = Adw.EntryRow(title=GLib.markup_escape_text(f"{name}: shortcut, such as <Super>F9"), text=self.ctx.desktop.shortcut(slug_for(name)), show_apply_button=True)
+            row = Adw.EntryRow(title=GLib.markup_escape_text(f"{name}: shortcut, such as <Super>F9"), text=self.ctx.desktop.shortcut(macro_slug(name)), show_apply_button=True)
             row.connect("apply", self._set_shortcut, name)
             play = Gtk.Button(label="Play in 3 s", valign=Gtk.Align.CENTER, tooltip_text="Gives you time to switch to the window you want")
             play.connect("clicked", lambda _b, m=macro: GLib.timeout_add_seconds(3, self._play, m))
@@ -326,7 +320,7 @@ class MacrosPage(Page):
 
     def _set_shortcut(self, row, name):
         binding = row.get_text().strip()
-        slug = slug_for(name)
+        slug = macro_slug(name)
         self.ctx.desktop.set_shortcut(slug, f"OpenArmoury macro: {name}", binding, f"openarmoury --macro {slug}")
         self.ctx.toast("Shortcut saved." if binding else "Shortcut removed.")
 
@@ -337,7 +331,7 @@ class MacrosPage(Page):
         return False
 
     def _delete(self, name):
-        self.ctx.desktop.set_shortcut(slug_for(name), "", "", "")
+        self.ctx.desktop.set_shortcut(macro_slug(name), "", "", "")
         self.ctx.config["macros"].pop(name, None)
         self.ctx.config.save()
         self._rebuild()
@@ -381,7 +375,7 @@ class MacrosPage(Page):
 
         def save(_button):
             title = name.get_text().strip()
-            if not title or not slug_for(title) or not events:
+            if not title or not macro_slug(title) or not events:
                 self.ctx.toast("Record some keys and give the macro a name first.")
                 return
             # A key still held when recording stopped would otherwise stay down.

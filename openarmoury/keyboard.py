@@ -166,8 +166,6 @@ class Keyboard:
             if self.power_model == "legacy":
                 return "The layout for this older keyboard comes from asusctl only. A wrong value could change when lights come on."
             return "The bit layout matches vendor code, but the packet that sends it comes from asusctl."
-        if operation == "macro":
-            return None
         if operation == "zone-effect":
             return "Zone numbers for built-in effects come from asusctl only."
         if operation == "direct" and self.kind == "zone":

@@ -7,6 +7,11 @@ from .config import Config
 from .writer import Helper, WriteError, Writer
 
 
+def macro_slug(name):
+    """The name a macro's desktop shortcut uses."""
+    return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")[:32]
+
+
 def plan(hw, config):
     """The writes to make, as tuples. Reads only, so it can be tested."""
     approved = config["approved"]
@@ -23,10 +28,7 @@ def plan(hw, config):
     if device and "fan-curve" in approved:
         for channel, entry in config["fan_curves"].get(profile or "default", {}).items():
             if entry.get("enabled"):
-                for index, (temp, pwm) in enumerate(entry["points"], 1):
-                    steps.append(("write", f"{device}/pwm{channel}_auto_point{index}_temp", temp))
-                    steps.append(("write", f"{device}/pwm{channel}_auto_point{index}_pwm", pwm))
-                steps.append(("write", f"{device}/pwm{channel}_enable", 1))
+                steps += [("write", path, value) for path, value in system.fan_curve_writes(device, channel, entry["points"])]
 
     lighting = config["lighting"]
     interfaces = hw.hidraw_keyboards()
@@ -47,7 +49,7 @@ def play_macro(slug):
     """Play a macro by the name its shortcut uses. Used by desktop shortcuts."""
     config = Config()
     for name, events in config["macros"].items():
-        if re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")[:32] == slug:
+        if macro_slug(name) == slug:
             helper = Helper()
             try:
                 helper.request(op="keys", events=events)

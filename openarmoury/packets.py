@@ -30,14 +30,13 @@ def _clamp(colour):
     return [max(0, min(255, int(c))) for c in colour]
 
 
-def effect(mode, colour, speed="medium", direction="right", zone=0, colour2=(0, 0, 0), length=64):
+def effect(mode, colour, speed="medium", direction="right", zone=0, length=64):
     """A built-in effect. Takes effect only after commit()."""
     packet = bytearray(length)
     packet[:4] = bytes([REPORT, OP_EFFECT, zone, MODES[mode]])
     packet[4:7] = bytes(_clamp(colour))
     packet[7] = SPEEDS[speed]
     packet[8] = DIRECTIONS[direction]
-    packet[10:13] = bytes(_clamp(colour2))
     return bytes(packet)
 
 

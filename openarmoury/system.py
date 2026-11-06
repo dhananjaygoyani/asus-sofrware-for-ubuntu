@@ -19,6 +19,16 @@ def fan_name(label):
     return " ".join(w.upper() if w in ("cpu", "gpu") else w for w in label.replace("_", " ").split())
 
 
+def fan_curve_writes(device, channel, points, enabled=True):
+    """The files and values that set a fan curve. The enable comes last, so the kernel checks the whole curve."""
+    writes = []
+    for index, (temp, pwm) in enumerate(points, 1):
+        writes.append((f"{device}/pwm{channel}_auto_point{index}_temp", temp))
+        writes.append((f"{device}/pwm{channel}_auto_point{index}_pwm", pwm))
+    writes.append((f"{device}/pwm{channel}_enable", 1 if enabled else 2))
+    return writes
+
+
 class Hardware:
     def __init__(self, root=""):
         self.root = root

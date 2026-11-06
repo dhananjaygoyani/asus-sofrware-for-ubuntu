@@ -16,7 +16,7 @@ from .context import Context  # noqa: E402
 from .automation import Automation  # noqa: E402
 from .extras import MacrosPage, MonitorPage, ScenariosPage  # noqa: E402
 from .lighting import LightingPage, StudioPage  # noqa: E402
-from .pages import DashboardPage, FansPage, PerformancePage, SystemPage  # noqa: E402
+from .pages import HomePage, FansPage, PerformancePage, SystemPage  # noqa: E402
 
 APP_ID = "org.openarmoury.App"
 WINDOW_BUTTONS = "close,minimize,maximize:"
@@ -92,7 +92,7 @@ ROW_ICONS = {
     "Keyboard interface": ("input-keyboard-symbolic", "indigo"),
     "Key layouts": ("input-keyboard-symbolic", "gray"),
 }
-PAGES = (DashboardPage, PerformancePage, FansPage, LightingPage, StudioPage, ScenariosPage, MonitorPage, MacrosPage, SystemPage)
+PAGES = (HomePage, PerformancePage, FansPage, LightingPage, StudioPage, ScenariosPage, MonitorPage, MacrosPage, SystemPage)
 
 
 class Window(Adw.ApplicationWindow):

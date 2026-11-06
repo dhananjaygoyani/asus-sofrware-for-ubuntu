@@ -18,11 +18,11 @@ def _has_schema(name):
     return bool(source and source.lookup(name, True))
 
 
-def rates_from_state(state, connector_prefixes=("eDP", "LVDS")):
+def rates_from_state(state):
     """The built-in panel's refresh rates at its current resolution, from Mutter's state."""
     _serial, monitors, _logical, _props = state
     for (spec, modes, _monitor_props) in monitors:
-        if not spec[0].startswith(connector_prefixes):
+        if not spec[0].startswith(("eDP", "LVDS")):
             continue
         current = next((m for m in modes if m[6].get("is-current")), None)
         if not current:

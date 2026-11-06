@@ -130,7 +130,6 @@ class GlideGroup(Gtk.Overlay):
     def __init__(self, content, style="accent", radius=10):
         super().__init__()
         self.pill = GlidePill(style, radius)
-        self.content = content
         self.selected_widget = None
         self.last_size = (0, 0)
         self.set_child(self.pill)

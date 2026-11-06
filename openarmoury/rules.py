@@ -13,9 +13,9 @@ def matches(pattern, process):
 
 
 def active_scenario(scenarios, processes):
-    """The first enabled scenario with a running program."""
+    """The first scenario with a running program."""
     for scenario in scenarios:
-        if scenario.get("enabled", True) and any(matches(scenario.get("match"), p) for p in processes):
+        if any(matches(scenario.get("match"), p) for p in processes):
             return scenario
     return None
 

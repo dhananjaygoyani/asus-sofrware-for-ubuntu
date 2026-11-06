@@ -253,7 +253,6 @@ class StudioPage(Page):
         outer.append(controls)
 
         self.stack = Adw.ViewStack(vexpand=True)
-        self.tab_row = None
         self.tab_holder = Gtk.Box(halign=Gtk.Align.CENTER, css_classes=["segmented"])
         outer.append(self.tab_holder)
         scroller = Gtk.ScrolledWindow(child=self.stack, vexpand=True, hscrollbar_policy=Gtk.PolicyType.NEVER)

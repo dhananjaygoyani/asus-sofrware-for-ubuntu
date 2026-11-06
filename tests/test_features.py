@@ -80,12 +80,12 @@ def test_scenario_matching():
     assert not rules.matches("factorio", PROCESS)
 
 
-def test_scenario_beats_power_rule_and_disabled_is_ignored():
+def test_scenario_beats_power_rule():
     power = {"ac": {"profile": "balanced"}, "battery": {"profile": "quiet", "low_refresh": True}}
     scenario = {"match": "game.bin", "profile": "performance", "touchpad": False}
     desired, active = rules.desired_state(power, [scenario], False, [PROCESS])
     assert desired["profile"] == "performance" and desired["touchpad"] is False and active is scenario
-    desired, active = rules.desired_state(power, [{**scenario, "enabled": False}], False, [PROCESS])
+    desired, active = rules.desired_state(power, [scenario], False, [])
     assert desired["profile"] == "balanced" and active is None
     desired, _ = rules.desired_state(power, [], True, [])
     assert desired["profile"] == "quiet" and desired["low_refresh"] is True

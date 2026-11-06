@@ -141,21 +141,20 @@ def _hue(position):
     return [c * 255 for c in table[int(sector) % 6]]
 
 
-def apply_brightness(frame, level, maximum=3):
-    """Dim the preview to match the keyboard's brightness level."""
-    amount = (level or 0) / (maximum or 1)
+def apply_brightness(frame, level):
+    """Dim the preview to match the keyboard's brightness level, from 0 to 3."""
+    amount = (level or 0) / 3
     return {code: [c * amount for c in colour] for code, colour in frame.items()}
 
 
 class RateLimiter:
     """Refuses a send if the last one was under a frame ago, whatever the caller's timer does."""
 
-    def __init__(self, interval=FRAME_INTERVAL):
-        self.interval = interval
+    def __init__(self):
         self.last = None
 
     def allow(self, now):
-        if self.last is not None and now - self.last < self.interval:
+        if self.last is not None and now - self.last < FRAME_INTERVAL:
             return False
         self.last = now
         return True

@@ -1,27 +1,11 @@
 """Custom drawing widgets, and the generic row for a firmware attribute."""
 import math
 
-import gi
-
-gi.require_version("Graphene", "1.0")
-gi.require_version("Gsk", "4.0")
+from . import design
 from gi.repository import Adw, Gdk, GLib, Graphene, Gsk, Gtk  # noqa: E402
 
-from . import design  # noqa: E402
-
-
 ACCENT = design.ACCENT
-
-
-def _colour(r, g, b, a=1.0):
-    # Gdk.RGBA ignores constructor arguments in GTK4's bindings, leaving it transparent.
-    value = Gdk.RGBA()
-    value.red, value.green, value.blue, value.alpha = r, g, b, a
-    return value
-
-
-def rgba(colour):
-    return _colour(colour[0] / 255, colour[1] / 255, colour[2] / 255)
+_colour = design.rgba
 
 
 def to_colour(value):
@@ -29,7 +13,7 @@ def to_colour(value):
 
 
 def colour_button(colour, on_change):
-    button = Gtk.ColorDialogButton(dialog=Gtk.ColorDialog(with_alpha=False), rgba=rgba(colour), valign=Gtk.Align.CENTER)
+    button = Gtk.ColorDialogButton(dialog=Gtk.ColorDialog(with_alpha=False), rgba=_colour(*(c / 255 for c in colour)), valign=Gtk.Align.CENTER)
     button.connect("notify::rgba", lambda b, _p: on_change(to_colour(b.get_rgba())))
     return button
 
@@ -53,6 +37,8 @@ def _fill_rounded(snapshot, x, y, w, h, radius, colour):
 class Canvas(Gtk.Widget):
     """A widget drawn with GTK's own snapshot API, so no Cairo bindings are needed."""
 
+    MIN_WIDTH, NATURAL_WIDTH = 200, 600
+
     def __init__(self, height, **kwargs):
         super().__init__(hexpand=True, **kwargs)
         self.natural_height = height
@@ -60,7 +46,7 @@ class Canvas(Gtk.Widget):
     def do_measure(self, orientation, _for_size):
         if orientation == Gtk.Orientation.VERTICAL:
             return self.natural_height, self.natural_height, -1, -1
-        return 200, 600, -1, -1
+        return self.MIN_WIDTH, self.NATURAL_WIDTH, -1, -1
 
     def _text(self, snapshot, text, x, y, colour):
         layout = self.create_pango_layout(text)
@@ -73,6 +59,7 @@ class Canvas(Gtk.Widget):
 class Gauge(Canvas):
     """A dial showing a value within a range. It turns brighter as it nears the top."""
 
+    MIN_WIDTH, NATURAL_WIDTH = 130, 150
     SWEEP = 1.5 * math.pi
     START = 0.75 * math.pi
 
@@ -84,11 +71,6 @@ class Gauge(Canvas):
         self.value = None
         self.shown = 0.0
         self.animation = None
-
-    def do_measure(self, orientation, _for_size):
-        if orientation == Gtk.Orientation.VERTICAL:
-            return self.natural_height, self.natural_height, -1, -1
-        return 130, 150, -1, -1
 
     def set_value(self, value):
         self.value = value

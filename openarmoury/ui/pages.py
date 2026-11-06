@@ -1,4 +1,4 @@
-"""Dashboard, Performance, Fans and System pages."""
+"""Home, Performance, Fans and System pages."""
 import json
 import os
 import pathlib
@@ -7,6 +7,7 @@ import shutil
 from gi.repository import Adw, GLib, Gtk
 
 from .. import effects
+from ..system import fan_curve_writes
 from . import design
 from .widgets import CurveView, Gauge, attribute_row, stat_tile
 
@@ -72,7 +73,7 @@ def apply_profile(ctx, choice, done):
     ctx.submit([ctx.write_op("profile", "/sys/firmware/acpi/platform_profile", choice)], finished)
 
 
-class DashboardPage(Page):
+class HomePage(Page):
     title = "Home"
     icon = "go-home-symbolic"
 
@@ -128,7 +129,7 @@ class DashboardPage(Page):
         body.append(Gtk.Label(label="Status", xalign=0, css_classes=["section-title"], margin_top=6))
         grid = Gtk.FlowBox(selection_mode=Gtk.SelectionMode.NONE, column_spacing=10, row_spacing=10, homogeneous=True, min_children_per_line=2, max_children_per_line=4)
         self.tiles = {}
-        for index, (key, title) in enumerate((("dgpu", "Discrete GPU"), ("battery", "Battery"), ("keyboard", "Keyboard"), ("profile", "Current mode"))):
+        for index, (key, title) in enumerate((("dgpu", "Discrete GPU"), ("battery", "Battery"), ("keyboard", "Keyboard"))):
             box, value, detail = stat_tile(title)
             box.add_css_class("home-card")
             box.add_css_class(f"stagger-{index % 6}")
@@ -166,7 +167,6 @@ class DashboardPage(Page):
         for label, rpm in hw.fans():
             if label in self.fan_gauges:
                 self.fan_gauges[label].set_value(rpm)
-        self.tiles["profile"][0].set_label(PROFILE_LABELS.get(profile, profile or "–"))
         gpu = meter.discrete_gpu()
         states = {"suspended": "Asleep", "active": "Awake"}
         self.tiles["dgpu"][0].set_label(states.get(gpu["state"], gpu["state"].title()) if gpu else "None")
@@ -326,12 +326,7 @@ class FansPage(Page):
 
     def ops_for(self, channel, points, enabled=True):
         device = self.ctx.hw.fan_curve_device()
-        ops = []
-        for index, (temp, pwm) in enumerate(points, 1):
-            ops.append(self.ctx.write_op("fan-curve", f"{device}/pwm{channel}_auto_point{index}_temp", temp))
-            ops.append(self.ctx.write_op("fan-curve", f"{device}/pwm{channel}_auto_point{index}_pwm", pwm))
-        ops.append(self.ctx.write_op("fan-curve", f"{device}/pwm{channel}_enable", 1 if enabled else 2))
-        return ops
+        return [self.ctx.write_op("fan-curve", path, value) for path, value in fan_curve_writes(device, channel, points, enabled)]
 
     def _apply(self, enabled):
         points = effects.monotonic_curve(self.curve.points)
@@ -398,7 +393,6 @@ class SystemPage(Page):
             self.care_values = [100, 80, 60]
             current = self.care_values.index(battery["limit"]) if battery["limit"] in self.care_values else 0
             self.care_row = design.SegmentedRow("Battery care", ["Full", "Balanced", "Longest life"], current, "Full for travel, lower limits for a laptop mostly on AC.")
-            self.care_ready = True
             self.care_row.connect("notify::selected", self._care_changed, battery["limit_path"])
             charging.add(self.care_row)
             full = Adw.ActionRow(title="Charge to 100% once", subtitle="Goes back to your limit when full. Needs the app running until then.")

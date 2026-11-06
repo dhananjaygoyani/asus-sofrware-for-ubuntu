@@ -6,7 +6,7 @@ lighting. It's an independent project, not made by or affiliated with ASUS.
 It works out what your laptop can do when it starts, from what the kernel and keyboard report, rather than from a
 list of supported models.
 
-![Home page](docs/screenshots/home-light.png)
+![Home page](docs/home.png)
 
 ## Try it safely
 
@@ -87,7 +87,7 @@ Tested on one machine: ROG Strix G513QC, BIOS 331, kernel 7.0, Ubuntu 24.04.5.
 
 ```sh
 python3 -m pytest tests
-xvfb-run -a -s "-screen 0 1280x900x24" env GSK_RENDERER=cairo python3 tests/shots.py docs/screenshots
+xvfb-run -a -s "-screen 0 1280x900x24" env GSK_RENDERER=cairo python3 tests/shots.py /tmp/openarmoury-shots
 ```
 
 ## Licence and credits

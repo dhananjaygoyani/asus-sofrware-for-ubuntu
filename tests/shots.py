@@ -10,6 +10,7 @@ import tempfile
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
 from openarmoury import demo  # noqa: E402
+from openarmoury.ui import design  # noqa: E402
 from openarmoury.ui.app import App, build_context  # noqa: E402
 from openarmoury.ui.pages import FAN_PRESETS  # noqa: E402
 from gi.repository import Adw, GLib, Gtk  # noqa: E402
@@ -17,19 +18,10 @@ from gi.repository import Adw, GLib, Gtk  # noqa: E402
 SETTINGS_ANIMATIONS = "gtk-enable-animations"
 
 GPU_ATTRIBUTE = "/sys/class/firmware-attributes/asus-armoury/attributes/dgpu_disable/current_value"
-OUT = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else "docs/screenshots")
+OUT = pathlib.Path(sys.argv[1])
 OUT.mkdir(parents=True, exist_ok=True)
 errors = []
 finished = []
-
-
-def _rows(widget):
-    """Every descendant of a widget."""
-    child = widget.get_first_child()
-    while child:
-        yield child
-        yield from _rows(child)
-        child = child.get_next_sibling()
 
 
 def page_named(window, title):
@@ -193,14 +185,14 @@ def scenario(app):
     ctx.hw.profile()
     original = ctx.hw.profile()
     target = "performance" if original != "performance" else "quiet"
-    ctx.config["scenarios"] = [{"name": "Browser", "match": "firefox", "enabled": True, "profile": target, "touchpad": False}]
+    ctx.config["scenarios"] = [{"name": "Browser", "match": "firefox", "profile": target, "touchpad": False}]
     page_named(window, "Scenarios")._rebuild()
     window.automation.tick()
     yield 400
     assert ctx.hw.profile() == target, "scenario did not switch profile"
     assert ctx.desktop.touchpad() is False, "scenario did not turn the touchpad off"
     capture(window, "scenarios-active")
-    ctx.config["scenarios"] = [{"name": "Browser", "match": "firefox", "enabled": False, "profile": target}]
+    ctx.config["scenarios"] = []
     window.automation.tick()
     yield 400
     assert ctx.hw.profile() == original and ctx.desktop.touchpad() is True, "settings not restored"
@@ -282,7 +274,7 @@ def scenario(app):
     # Cancelling a switch puts it back, so it can't claim a change that didn't happen.
     window.show_page("Performance")
     yield 200
-    switch = next(r for r in _rows(page_named(window, "Performance").widget) if isinstance(r, Adw.SwitchRow))
+    switch = next(r for r in design.descendants(page_named(window, "Performance").widget) if isinstance(r, Adw.SwitchRow))
     switch.set_active(True)
     yield 400
     dialog = window.get_visible_dialog()

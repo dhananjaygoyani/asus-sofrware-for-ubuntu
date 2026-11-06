@@ -7,8 +7,8 @@ from openarmoury.config import Config
 
 
 def test_effect_matches_asusctl_vector():
-    packet = packets.effect("Static", (0xFF, 0x11, 0xDD), "medium", "right", colour2=(0xA6, 0, 0), length=17)
-    assert packet.hex() == "5db30000ff11ddeb0000a6000000000000"
+    packet = packets.effect("Static", (0xFF, 0x11, 0xDD), "medium", "right", length=17)
+    assert packet.hex() == "5db30000ff11ddeb000000000000000000"
 
 
 def test_effect_is_padded_to_declared_length():

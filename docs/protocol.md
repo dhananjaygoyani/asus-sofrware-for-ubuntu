@@ -258,7 +258,7 @@ Limits to be honest about:
 
 ## 12. Not analysed
 
-- `ArmouryCrate.AuraPlugin.dll`, `AuraEditor.dll` and the `.ini` files. Aura Studio's keyframe editor will be our own
+- `ArmouryCrate.AuraPlugin.dll`, `AuraEditor.dll` and the `.ini` files. Light Studio's keyframe editor will be our own
   design, so these weren't needed for the protocol.
 - GPU mode logic in `ArmouryCrate.GPUMode.dll`. The kernel's `dgpu_disable` is the interface here.
 - Runtime behaviour. Everything here is static; no USB capture was taken.
