@@ -375,7 +375,6 @@ ATTRIBUTE_TITLES = {
     "apu_mem": "Integrated GPU memory",
     "boot_sound": "Boot sound",
     "charge_mode": "Charging source",
-    "dgpu_disable": "Turn off discrete GPU",
     "dgpu_power_state": "Discrete GPU power state",
     "egpu_connected": "External GPU connected",
     "egpu_enable": "Use external GPU",

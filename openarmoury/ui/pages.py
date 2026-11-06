@@ -9,18 +9,34 @@ from gi.repository import Adw, GLib, Gtk
 from .. import effects
 from ..system import fan_curve_writes
 from . import design
+from .context import Op
 from .widgets import CurveView, Gauge, attribute_row, stat_tile
 
-GPU_ATTRIBUTES = ("dgpu_disable", "gpu_mux_mode", "egpu_enable", "egpu_connected", "dgpu_power_state", "mini_led_mode")
+GPU_ATTRIBUTES = ("gpu_mux_mode", "egpu_enable", "egpu_connected", "dgpu_power_state", "mini_led_mode")
 POWER_PREFIXES = ("ppt_", "nv_", "apu_mem")
 GPU_WARNINGS = {
-    "dgpu_disable": (
-        "The laptop may need a restart, and external displays wired to that GPU will stop working."
-    ),
     "gpu_mux_mode": "Changing the GPU mode takes effect after a restart. The internal display may go blank if the "
     "graphics driver isn't set up for the new mode.",
     "egpu_enable": "Only change this with the external GPU connected and nothing using it.",
 }
+# Each state: what the row says, its button, and what the button does.
+GPU_STATES = {
+    "automatic": ("On, and asleep whenever it's idle.", "Turn off…"),
+    "restart-to-unload": ("Step 1 of 2 is done. Restart the laptop, then come back here.", "Cancel"),
+    "ready": ("Step 2 of 2: the driver is gone, so it's now safe to turn the GPU off.", "Turn off now"),
+    "off": ("Off. Games and apps can't use it until it's turned back on.", "Turn on"),
+    "restart-to-load": ("Turned on. Restart the laptop to finish.", None),
+    "blocked": ("Unavailable while its driver is loaded, because it can crash the laptop.", None),
+}
+GPU_OFF_WARNING = (
+    "Step 1 of 2. This stops the NVIDIA driver from loading, which takes a few minutes, and then you restart. "
+    "Games can't use this GPU until you turn it back on. Automatic sleep already saves nearly the same power."
+)
+GPU_OFF_NOW_WARNING = (
+    "This is stored in the firmware, so the GPU also stays off in Windows until you turn it on again. "
+    "External displays wired to this GPU will stop working. This step hasn't been tested on this laptop, "
+    "so save your work first."
+)
 PROFILE_LABELS = {
     "quiet": "Quiet",
     "low-power": "Low power",
@@ -232,20 +248,16 @@ class PerformancePage(Page):
         gpu = [a for a in attributes if a["name"] in GPU_ATTRIBUTES]
         power = [a for a in attributes if a["name"].startswith(POWER_PREFIXES)]
         gpu_group = Adw.PreferencesGroup(title="Graphics", description="These changes can blank the screen or need a restart. Each one asks first.")
-        blocked = ctx.hw.gpu_driver_loaded()
-        if gpu:
-            for attribute in gpu:
-                if attribute["name"] == "dgpu_disable" and blocked and attribute["value"] != "1":
-                    gpu_group.add(Adw.ActionRow(title="Turn off discrete GPU", subtitle="Unavailable while the GPU's driver is loaded, because it can crash the laptop.", sensitive=False))
-                else:
-                    gpu_group.add(attribute_row(ctx, attribute, GPU_WARNINGS.get(attribute["name"]), self.refresh))
-        elif blocked and ctx.hw.nb_wmi("dgpu_disable") == "0":
-            gpu_group.add(Adw.ActionRow(title="Turn off discrete GPU", subtitle="Unavailable while the GPU's driver is loaded, because it can crash the laptop.", sensitive=False))
-        elif ctx.hw.nb_wmi("dgpu_disable") is not None:
-            row = Adw.SwitchRow(title="Disable discrete GPU", active=ctx.hw.nb_wmi("dgpu_disable") == "1")
-            row.connect("notify::active", lambda r, _p: ctx.submit([ctx.write_op("attr:dgpu_disable", "/sys/devices/platform/asus-nb-wmi/dgpu_disable", "1" if r.get_active() else "0")], warning=GPU_WARNINGS["dgpu_disable"]))
-            gpu_group.add(row)
-        else:
+        self.gpu_row = None
+        if ctx.hw.gpu_switch_state():
+            self.gpu_row = Adw.ActionRow(title="Discrete GPU")
+            self.gpu_button = Gtk.Button(valign=Gtk.Align.CENTER)
+            self.gpu_button.connect("clicked", self._gpu_clicked)
+            self.gpu_row.add_suffix(self.gpu_button)
+            gpu_group.add(self.gpu_row)
+        for attribute in gpu:
+            gpu_group.add(attribute_row(ctx, attribute, GPU_WARNINGS.get(attribute["name"]), self.refresh))
+        if not gpu and not self.gpu_row:
             gpu_group.add(Adw.ActionRow(title="No graphics controls", subtitle="This laptop's kernel exposes none."))
         page.add(gpu_group)
 
@@ -256,6 +268,30 @@ class PerformancePage(Page):
             page.add(power_group)
         self.updating = False
         self.refresh()
+
+    def _prime_op(self, mode):
+        helper = self.ctx.helper
+        return Op("graphics-mode", "prime-select (Ubuntu's graphics mode tool)", mode, lambda: helper.request(op="prime", mode=mode))
+
+    def _gpu_clicked(self, _button):
+        ctx = self.ctx
+        state = ctx.hw.gpu_switch_state()
+        path = ctx.hw.gpu_switch_path()
+        toast = {"automatic": "Now restart the laptop, then come back here.", "off": "Now restart the laptop to finish."}.get(state)
+
+        def done(ok):
+            if ok and toast:
+                ctx.toast(toast)
+            self.refresh()
+
+        if state == "automatic":
+            ctx.submit([self._prime_op("intel")], done, GPU_OFF_WARNING)
+        elif state == "restart-to-unload":
+            ctx.submit([self._prime_op("on-demand")], done)
+        elif state == "ready":
+            ctx.submit([ctx.write_op("gpu-switch", path, "1")], done, GPU_OFF_NOW_WARNING)
+        elif state == "off":
+            ctx.submit([ctx.write_op("gpu-switch", path, "0"), self._prime_op("on-demand")], done)
 
     def _profile_toggled(self, button, choice):
         if self.updating or not button.get_active():
@@ -270,6 +306,11 @@ class PerformancePage(Page):
             self.buttons[current].set_active(True)
         self.updating = False
         self.banner.set_revealed(self.ctx.hw.pending_reboot())
+        if self.gpu_row:
+            subtitle, label = GPU_STATES[self.ctx.hw.gpu_switch_state()]
+            self.gpu_row.set_subtitle(subtitle)
+            self.gpu_button.set_visible(label is not None)
+            self.gpu_button.set_label(label or "")
 
 
 class FansPage(Page):

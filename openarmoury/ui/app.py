@@ -33,8 +33,6 @@ SIDEBAR_COLOURS = {
 }
 ROW_ICONS = {
     "Performance profile": ("power-profile-performance-symbolic", "red"),
-    "Turn off discrete GPU": ("video-display-symbolic", "green"),
-    "Disable discrete GPU": ("video-display-symbolic", "green"),
     "GPU MUX mode": ("video-display-symbolic", "green"),
     "CPU sustained power limit": ("speedometer-symbolic", "orange"),
     "CPU fast power limit": ("speedometer-symbolic", "red"),

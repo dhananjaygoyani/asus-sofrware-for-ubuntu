@@ -4,13 +4,13 @@
     xvfb-run -a -s "-screen 0 1280x900x24" env GSK_RENDERER=cairo python3 tests/shots.py OUTPUT_DIR
 """
 import pathlib
+import shutil
 import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
 from openarmoury import demo  # noqa: E402
-from openarmoury.ui import design  # noqa: E402
 from openarmoury.ui.app import App, build_context  # noqa: E402
 from openarmoury.ui.pages import FAN_PRESETS  # noqa: E402
 from gi.repository import Adw, GLib, Gtk  # noqa: E402
@@ -271,19 +271,53 @@ def scenario(app):
     yield 400
     assert home.mode_buttons[before].get_active() and ctx.hw.profile() == before, "tile stayed on a cancelled mode"
 
-    # Cancelling a switch puts it back, so it can't claim a change that didn't happen.
+    # Turning the GPU off goes step by step, with the driver gone before the switch is used.
     window.show_page("Performance")
     yield 200
-    switch = next(r for r in design.descendants(page_named(window, "Performance").widget) if isinstance(r, Adw.SwitchRow))
-    switch.set_active(True)
+    perf = page_named(window, "Performance")
+    gpu_path = ctx.hw.gpu_switch_path()
+    perf._gpu_clicked(None)
     yield 400
     dialog = window.get_visible_dialog()
     assert dialog is not None and "restart" in dialog.get_body(), "GPU warning not shown"
     capture(window, "gate-gpu")
     dialog.close()
     yield 400
-    assert not switch.get_active(), "switch stayed on after cancel"
-    assert ctx.hw.read(GPU_ATTRIBUTE) == "0", "cancel still wrote"
+    assert ctx.hw.gpu_switch_state() == "automatic", "cancel still changed the graphics mode"
+
+    def approve():
+        dialog = window.get_visible_dialog()
+        assert dialog is not None, "GPU step skipped the gate"
+        dialog.emit("response", "write")
+        dialog.force_close()
+
+    perf._gpu_clicked(None)
+    yield 300
+    approve()
+    yield 400
+    assert ctx.hw.gpu_switch_state() == "restart-to-unload", "step 1 didn't happen"
+    assert perf.gpu_button.get_label() == "Cancel"
+    shutil.rmtree(ctx.demo_root + "/sys/module/nvidia")  # what the restart does
+    perf.refresh()
+    assert perf.gpu_button.get_label() == "Turn off now", "step 2 not offered"
+    perf._gpu_clicked(None)
+    yield 300
+    dialog = window.get_visible_dialog()
+    assert dialog is not None and "Windows" in dialog.get_body(), "Windows warning not shown"
+    capture(window, "gate-gpu-off")
+    approve()
+    yield 400
+    assert ctx.hw.read(gpu_path) == "1" and perf.gpu_button.get_label() == "Turn on", "GPU didn't turn off"
+    perf._gpu_clicked(None)
+    yield 400
+    if window.get_visible_dialog():
+        approve()
+        yield 400
+    assert ctx.hw.read(gpu_path) == "0" and ctx.hw.gpu_switch_state() == "restart-to-load", "GPU didn't turn on"
+    assert not perf.gpu_button.get_visible(), "nothing to click while waiting for a restart"
+    demo._write(ctx.demo_root, "/sys/module/nvidia/version", "595")
+    perf.refresh()
+    assert ctx.hw.gpu_switch_state() == "automatic"
     window.show_page("System")
 
     # Battery care: cancelling puts the buttons and the number back on the real limit.

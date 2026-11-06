@@ -12,7 +12,7 @@ code or assets are in OpenArmoury; these features are written from scratch on Li
 |---|---|---|---|
 | Operating modes | `ThrottleMonitorPlugin` | Performance | `platform_profile` |
 | Manual fan control, Fan Xpert | `FanControlLibrary` | Fans, including a full-speed preset | `asus_custom_fan_curve` |
-| GPU mode: Eco and Standard | `GPUMode` | Performance | `dgpu_disable`, with warnings |
+| GPU mode: Eco and Standard | `GPUMode` | Performance, in two steps with a restart | `prime-select` stops the driver, then `dgpu_disable`. Not yet tested on real hardware |
 | GPU mode: Ultimate | `GPUMode` | Performance, if the laptop has a MUX switch | `gpu_mux_mode`. **Your laptop has none** |
 | Manual CPU and GPU power limits | `CPUControlLibrary` | Performance, using the kernel's limits | Firmware attributes. **Not available on your laptop**: the kernel has no limits for it |
 | Panel overdrive, boot sound, charging info, and other firmware settings | `SystemFeature` | System | Firmware attributes |

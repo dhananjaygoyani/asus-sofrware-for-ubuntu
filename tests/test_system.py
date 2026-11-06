@@ -1,5 +1,7 @@
 """Discovery against the mock tree, restore planning, and rules that must hold across the code."""
+import os
 import pathlib
+import shutil
 
 import pytest
 
@@ -132,3 +134,24 @@ def test_app_icon_has_no_light_halo(size):
             dy = -step if y == size - 1 else step if y == 0 else 0
             r, g, b, a = icon.getpixel((x + dx, y + dy))
             assert a == 0 or min(r, g, b) < 215, (x + dx, y + dy, r, g, b, a)
+
+
+def test_gpu_switch_only_becomes_ready_without_the_driver(hw):
+    path = hw.gpu_switch_path()
+    assert hw.gpu_switch_state() == "automatic"
+    demo._write(hw.root, "/etc/prime-discrete", "off")
+    assert hw.gpu_switch_state() == "restart-to-unload"
+    shutil.rmtree(hw.root + "/sys/module/nvidia")
+    assert hw.gpu_switch_state() == "ready"
+    demo._write(hw.root, path, "1")
+    assert hw.gpu_switch_state() == "off"
+    demo._write(hw.root, path, "0")
+    demo._write(hw.root, "/etc/prime-discrete", "on-demand")
+    assert hw.gpu_switch_state() == "restart-to-load"
+
+
+def test_gpu_switch_without_prime_select_stays_blocked_while_loaded(hw):
+    os.unlink(hw.root + "/etc/prime-discrete")
+    assert hw.gpu_switch_state() == "blocked"
+    shutil.rmtree(hw.root + "/sys/module/nvidia")
+    assert hw.gpu_switch_state() == "ready"

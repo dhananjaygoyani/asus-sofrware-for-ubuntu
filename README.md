@@ -68,7 +68,8 @@ Tested on one machine: ROG Strix G513QC, BIOS 331, kernel 7.0, Ubuntu 24.04.5.
 | **Checked on the real laptop, read-only** | Model, sensors, fans, curves, profiles, attributes, keyboard interface, GPU state, refresh rates and battery health read correctly (`tests/real_readonly.py`) |
 | **Tested on the real laptop, with settings restored** | Profiles, charge limit, brightness, boot sound, panel overdrive, fan curves, the keyboard query, effects, zone and live colour commands, macro playback, NVIDIA readings, touchpad, Win key, microphone, night light, ROG shortcut, refresh rate and the audio reader (`tests/real_write_check.py`) |
 | **Sent, but only your eyes can confirm** | Whether each lighting effect and zone looks right on the keyboard |
-| **Tested and found unsafe** | Turning off the GPU with its driver loaded crashed the kernel and the display server. The app and helper now refuse it |
+| **Tested and found unsafe** | Turning off the GPU with its driver loaded crashed the kernel and the display server. The app and helper refuse it |
+| **Not yet tested on real hardware** | The two-step way to turn off the GPU: stopping the driver through `prime-select`, restarting, then the switch |
 | **Accepted, but the effect isn't confirmed** | Saving to keyboard flash, which needs a restart to confirm, and boot and sleep lighting, which needs a restart and a sleep to confirm |
 | **Unproven protocol details** | Which packet saves to flash; direct colour on this model; zone numbers; see [docs/protocol.md](docs/protocol.md) |
 | **Other ASUS laptops** | Untested. Model data comes from asusctl, and detection is designed to fall back to fewer features |

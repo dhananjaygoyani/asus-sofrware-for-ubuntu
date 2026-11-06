@@ -160,6 +160,27 @@ class Hardware:
         """While this is true the GPU can't safely be turned off: doing so crashed the kernel when tested."""
         return self.exists("/sys/module/nvidia") or self.exists("/sys/module/nouveau")
 
+    def gpu_switch_path(self):
+        for path in (f"{ARMOURY}/dgpu_disable/current_value", f"{NB_WMI}/dgpu_disable"):
+            if self.exists(path):
+                return path
+        return None
+
+    def gpu_switch_state(self):
+        """Where turning the GPU off has got to. The driver must be gone before the switch is safe."""
+        path = self.gpu_switch_path()
+        if not path:
+            return None
+        if self.read(path) == "1":
+            return "off"
+        loaded = self.gpu_driver_loaded()
+        prime = self.read("/etc/prime-discrete")
+        if prime is None:
+            return "blocked" if loaded else "ready"
+        if prime == "off":
+            return "restart-to-unload" if loaded else "ready"
+        return "automatic" if loaded else "restart-to-load"
+
     def battery_health(self):
         """Current full capacity as a share of its design capacity, and the cycle count."""
         for path in self.batteries():

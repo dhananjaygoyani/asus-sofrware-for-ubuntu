@@ -11,6 +11,7 @@ import os
 import re
 import stat
 import struct
+import subprocess
 import sys
 import time
 
@@ -20,6 +21,8 @@ ASUS_VENDOR = "00000B05"
 HANDSHAKE = b"ASUS Tech.Inc.\x00"
 REPORT_IDS = (0x5A, 0x5D)
 FAN_CURVE_HWMON = "asus_custom_fan_curve"
+PRIME_FILE = "/etc/prime-discrete"
+PRIME_MODES = {"intel": "off", "on-demand": "on-demand"}  # what prime-select then records in its file
 MAX_KEY_EVENTS = 512
 MAX_KEY_DELAY_MS = 5000
 MAX_KEYCODE = 248  # the keyboard range; buttons and firmware keys sit above it
@@ -294,6 +297,28 @@ def do_keys(events):
     return {}
 
 
+def do_prime(mode):
+    """Ubuntu's own graphics mode tool, with a fixed path and only two modes."""
+    if mode not in PRIME_MODES:
+        raise Refused("bad graphics mode")
+    if test_root():
+        with open(real(PRIME_FILE), "w", encoding="ascii") as f:
+            f.write(PRIME_MODES[mode] + "\n")
+        return {}
+    result = subprocess.run(
+        ["/usr/bin/prime-select", mode],
+        env={"PATH": "/usr/sbin:/usr/bin:/sbin:/bin"},
+        stdin=subprocess.DEVNULL,
+        capture_output=True,
+        text=True,
+        timeout=900,  # it rebuilds the boot image, which takes minutes
+        check=False,
+    )
+    if result.returncode != 0:
+        raise Refused(f"prime-select failed: {result.stderr.strip()[:200]}")
+    return {}
+
+
 def handle(request):
     if not isinstance(request, dict):
         raise Refused("bad request")
@@ -306,6 +331,8 @@ def handle(request):
         return do_hid(request.get("node"), request.get("kind"), request.get("data"))
     if op == "get_feature":
         return do_get_feature(request.get("node"), request.get("report_id"), request.get("length"))
+    if op == "prime":
+        return do_prime(request.get("mode"))
     if op == "keys":
         return do_keys(request.get("events"))
     raise Refused("unknown op")

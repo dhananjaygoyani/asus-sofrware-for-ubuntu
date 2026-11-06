@@ -4,6 +4,7 @@ import importlib.util
 import json
 import os
 import pathlib
+import shutil
 import subprocess
 
 import pytest
@@ -88,12 +89,23 @@ def test_refused_writes(tree, path, value):
 
 @pytest.mark.parametrize("path", [f"{ARMOURY}/dgpu_disable/current_value", "/sys/devices/platform/asus-nb-wmi/dgpu_disable"])
 def test_gpu_cant_be_turned_off_with_its_driver_loaded(tree, path):
-    helper.check_write(path, "1")  # no driver in the mock tree
-    demo._write(tree, "/sys/module/nvidia/version", "595")
     with pytest.raises(helper.Refused):
         helper.do_write(path, "1")
     assert pathlib.Path(tree + path).read_text().strip() == "0"
     helper.check_write(path, "0")  # turning it back on is always allowed
+    shutil.rmtree(tree + "/sys/module/nvidia")
+    helper.check_write(path, "1")  # safe once the driver is gone
+
+
+@pytest.mark.parametrize("mode", ["nvidia", "off", "../evil", "", None, 1, ["intel"]])
+def test_graphics_mode_is_a_fixed_list(tree, mode):
+    with pytest.raises((helper.Refused, TypeError)):
+        helper.do_prime(mode)
+
+
+def test_graphics_mode_records_the_choice(tree):
+    helper.do_prime("intel")
+    assert pathlib.Path(tree + "/etc/prime-discrete").read_text().strip() == "off"
 
 
 def test_symlink_out_of_sys_is_refused(tree, tmp_path):
