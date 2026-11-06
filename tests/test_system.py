@@ -108,3 +108,12 @@ def test_demo_never_shares_an_instance_with_the_real_app():
     """A shared instance would turn --demo into a window onto real hardware."""
     text = (SOURCE / "ui" / "app.py").read_text()
     assert "NON_UNIQUE" in text and "not ctx.is_demo" in text
+
+
+@pytest.mark.parametrize("size", [16, 24, 32, 48, 64, 96, 128])
+def test_app_icon_sizes_have_transparent_corners(size):
+    image = pytest.importorskip("PIL.Image")
+    icon = image.open(SOURCE.parent / "data" / "icons" / f"{size}.png")
+    assert icon.size == (size, size) and icon.mode == "RGBA"
+    assert icon.getpixel((0, 0))[3] == 0 and icon.getpixel((size - 1, size - 1))[3] == 0
+    assert icon.getpixel((size // 2, size // 2))[3] == 255

@@ -14,6 +14,7 @@ rm -f "$DESTDIR/usr/bin/openarmoury" \
       "$DESTDIR/usr/share/polkit-1/actions/org.openarmoury.helper.policy" \
       "$DESTDIR/usr/share/applications/org.openarmoury.App.desktop" \
       "$DESTDIR/usr/share/icons/hicolor/scalable/apps/org.openarmoury.App.svg" \
+      "$DESTDIR"/usr/share/icons/hicolor/*x*/apps/org.openarmoury.App.png \
       "$DESTDIR/etc/udev/rules.d/70-openarmoury.rules"
 
 if [ -n "${SUDO_USER:-}" ]; then

@@ -96,4 +96,7 @@ Keyboard layouts and the model table in `openarmoury/data/asusctl/` are converte
 [asusctl](https://github.com/opengamingcollective/asusctl) and stay under the Mozilla Public License 2.0, with the
 licence alongside them. `scripts/import_asusctl.py` regenerates them.
 
+The app icon was generated with Canva. Check Canva's terms for AI-generated images before publishing it.
+`scripts/make_icons.py` rebuilds the sizes from `data/icons/source.png`.
+
 The rest of the project has no licence chosen yet.

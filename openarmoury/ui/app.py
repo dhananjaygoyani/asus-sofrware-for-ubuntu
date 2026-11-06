@@ -288,6 +288,7 @@ class App(Adw.Application):
     def do_activate(self):
         if not self.window:
             self._load_theme()
+            Gtk.Window.set_default_icon_name(APP_ID)
             self.window = Window(self, self.ctx)
             self.window.update_background()
         if self.start_hidden:
