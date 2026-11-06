@@ -5,7 +5,10 @@ import gi
 
 gi.require_version("Graphene", "1.0")
 gi.require_version("Gsk", "4.0")
-from gi.repository import Adw, Gdk, Graphene, Gsk, Gtk  # noqa: E402
+from gi.repository import Adw, Gdk, GLib, Graphene, Gsk, Gtk  # noqa: E402
+
+
+ACCENT = (0.85, 0.02, 0.16)
 
 
 def _colour(r, g, b, a=1.0):
@@ -65,6 +68,70 @@ class Canvas(Gtk.Widget):
         snapshot.restore()
 
 
+class Gauge(Canvas):
+    """A dial showing a value within a range. It turns brighter as it nears the top."""
+
+    SWEEP = 1.5 * math.pi
+    START = 0.75 * math.pi
+
+    def __init__(self, title, unit, maximum):
+        super().__init__(150)
+        self.title = title
+        self.unit = unit
+        self.maximum = maximum
+        self.value = None
+
+    def do_measure(self, orientation, _for_size):
+        if orientation == Gtk.Orientation.VERTICAL:
+            return self.natural_height, self.natural_height, -1, -1
+        return 130, 150, -1, -1
+
+    def set_value(self, value):
+        self.value = value
+        reading = f"{value:.0f} {self.unit}" if value is not None else "not available"
+        self.update_property([Gtk.AccessibleProperty.LABEL], [f"{self.title}: {reading}"])
+        self.queue_draw()
+
+    def _arc(self, centre_x, centre_y, radius, amount):
+        builder = Gsk.PathBuilder.new()
+        steps = max(2, int(48 * amount))
+        for step in range(steps + 1):
+            angle = self.START + self.SWEEP * amount * step / steps
+            x, y = centre_x + radius * math.cos(angle), centre_y + radius * math.sin(angle)
+            (builder.line_to if step else builder.move_to)(x, y)
+        return builder.to_path()
+
+    def _centred(self, snapshot, text, centre_x, y, colour, markup=None):
+        layout = self.create_pango_layout(text)
+        if markup:
+            layout.set_markup(markup, -1)
+        width, _height = layout.get_pixel_size()
+        snapshot.save()
+        snapshot.translate(_point(centre_x - width / 2, y))
+        snapshot.append_layout(layout, colour)
+        snapshot.restore()
+
+    def do_snapshot(self, snapshot):
+        width, height = self.get_width(), self.get_height()
+        centre_x, centre_y = width / 2, height / 2 - 4
+        radius = min(width, height) / 2 - 14
+        stroke = Gsk.Stroke.new(9)
+        stroke.set_line_cap(Gsk.LineCap.ROUND)
+        snapshot.append_stroke(self._arc(centre_x, centre_y, radius, 1.0), stroke, _colour(1, 1, 1, 0.09))
+        fg = self.get_color()
+        if self.value is None:
+            self._centred(snapshot, "–", centre_x, centre_y - 10, fg)
+        else:
+            amount = max(0.0, min(1.0, self.value / self.maximum))
+            if amount > 0.005:
+                colour = _colour(1.0, 0.2, 0.3) if amount > 0.85 else _colour(*ACCENT)
+                snapshot.append_stroke(self._arc(centre_x, centre_y, radius, amount), stroke, colour)
+            text = GLib.markup_escape_text(f"{self.value:,.0f}")
+            self._centred(snapshot, "", centre_x, centre_y - 20, fg, f"<span size='x-large' weight='heavy'>{text}</span>")
+            self._centred(snapshot, self.unit, centre_x, centre_y + 8, _colour(fg.red, fg.green, fg.blue, 0.6))
+        self._centred(snapshot, self.title, centre_x, height - 22, _colour(fg.red, fg.green, fg.blue, 0.75))
+
+
 class Sparkline(Canvas):
     """A small history chart, from 0 to 100."""
 
@@ -89,11 +156,11 @@ class Sparkline(Canvas):
             area.line_to(index * step, y(value))
         area.line_to(width, height)
         area.close()
-        snapshot.append_fill(area.to_path(), Gsk.FillRule.WINDING, _colour(0.21, 0.52, 0.89, 0.25))
+        snapshot.append_fill(area.to_path(), Gsk.FillRule.WINDING, _colour(*ACCENT, 0.25))
         line = Gsk.PathBuilder.new()
         for index, value in enumerate(self.values):
             (line.line_to if index else line.move_to)(index * step, y(value))
-        snapshot.append_stroke(line.to_path(), Gsk.Stroke.new(2), _colour(0.21, 0.52, 0.89))
+        snapshot.append_stroke(line.to_path(), Gsk.Stroke.new(2), _colour(*ACCENT))
 
 
 class KeyboardView(Canvas):
@@ -259,14 +326,14 @@ class CurveView(Canvas):
             self._text(snapshot, f"{temp}°", x - 10, top + h + 6, label)
         if not self.points:
             return
-        accent = _colour(0.21, 0.52, 0.89)
+        accent = _colour(*ACCENT)
         area = Gsk.PathBuilder.new()
         area.move_to(self._xy(self.points[0])[0], top + h)
         for point in self.points:
             area.line_to(*self._xy(point))
         area.line_to(self._xy(self.points[-1])[0], top + h)
         area.close()
-        snapshot.append_fill(area.to_path(), Gsk.FillRule.WINDING, _colour(0.21, 0.52, 0.89, 0.18))
+        snapshot.append_fill(area.to_path(), Gsk.FillRule.WINDING, _colour(*ACCENT, 0.18))
         line = Gsk.PathBuilder.new()
         for index, point in enumerate(self.points):
             (line.line_to if index else line.move_to)(*self._xy(point))

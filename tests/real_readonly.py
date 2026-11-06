@@ -17,6 +17,9 @@ OUT = pathlib.Path(sys.argv[1])
 OUT.mkdir(parents=True, exist_ok=True)
 
 
+done = []
+
+
 def capture(window, name):
     paintable = Gtk.WidgetPaintable.new(window)
     snapshot = Gtk.Snapshot()
@@ -27,7 +30,7 @@ def capture(window, name):
 def main():
     with tempfile.TemporaryDirectory() as config:
         ctx = build_context(config_dir=config)
-        app = App(ctx)
+        app = App(ctx, unique=False)
         hw = ctx.hw
         print("identity", {k: hw.identity()[k] for k in ("product", "board", "bios")})
         print("cpu", hw.cpu_temp(), "igpu", hw.igpu_temp(), "fans", hw.fans())
@@ -57,6 +60,7 @@ def main():
                 if index == len(names):
                     assert ctx.helper.process is None, "helper was started"
                     print("helper started:", ctx.helper.process is not None)
+                    done.append(True)
                     window.close()
                     app.quit()
                     return False
@@ -69,6 +73,7 @@ def main():
 
         app.connect("activate", lambda _a: GLib.idle_add(run))
         app.run([])
+        assert done, "the window never ran"
 
 
 main()

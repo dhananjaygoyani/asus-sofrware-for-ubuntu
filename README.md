@@ -6,7 +6,7 @@ lighting. It's an independent project, not made by or affiliated with ASUS.
 It works out what your laptop can do when it starts, from what the kernel and keyboard report, rather than from a
 list of supported models.
 
-![Lighting page](docs/screenshots/lighting-detected.png)
+![Home page](docs/screenshots/home-performance.png)
 
 ## Try it safely
 
@@ -35,7 +35,7 @@ instead, and asks for your password once a session.
 
 | Page | What it does |
 |---|---|
-| Dashboard | Temperatures, fan speeds, battery, profile and keyboard type |
+| Home | Operating mode tiles, live gauges for temperature, load, memory and fans, and status |
 | Performance | Profile, GPU settings with warnings, and power limits with the kernel's own min and max |
 | Fans | Drag-to-edit curves with 8 points per fan, re-applied when you return to a profile |
 | Lighting | Built-in effects, colour, speed, direction, zones, brightness, and boot/sleep lighting, with an animated preview |

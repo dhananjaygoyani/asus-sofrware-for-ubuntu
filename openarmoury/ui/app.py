@@ -1,11 +1,12 @@
 """The application window."""
+import pathlib
 import time
 
 import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gdk, GLib, Gtk  # noqa: E402
+from gi.repository import Adw, Gdk, Gio, GLib, Gtk  # noqa: E402
 
 from .. import demo  # noqa: E402
 from ..effects import FRAME_INTERVAL  # noqa: E402
@@ -16,16 +17,12 @@ from .lighting import LightingPage, StudioPage  # noqa: E402
 from .pages import DashboardPage, FansPage, PerformancePage, SystemPage  # noqa: E402
 
 APP_ID = "org.openarmoury.App"
-CSS = """
-.stat-tile { padding: 14px 16px; min-width: 150px; }
-.warning { color: @warning_color; }
-"""
 PAGES = (DashboardPage, PerformancePage, FansPage, LightingPage, StudioPage, ScenariosPage, MonitorPage, MacrosPage, SystemPage)
 
 
 class Window(Adw.ApplicationWindow):
     def __init__(self, app, ctx):
-        super().__init__(application=app, title="OpenArmoury", default_width=1040, default_height=720)
+        super().__init__(application=app, title="OpenArmoury", default_width=1220, default_height=780)
         self.ctx = ctx
         ctx.window = self
         self.app = app
@@ -135,8 +132,10 @@ class Window(Adw.ApplicationWindow):
 
 
 class App(Adw.Application):
-    def __init__(self, ctx, start_hidden=False):
-        super().__init__(application_id=APP_ID)
+    def __init__(self, ctx, start_hidden=False, unique=True):
+        # Not unique: otherwise a demo or test would hand off to a running real window.
+        flags = Gio.ApplicationFlags.DEFAULT_FLAGS if unique and not ctx.is_demo else Gio.ApplicationFlags.NON_UNIQUE
+        super().__init__(application_id=APP_ID, flags=flags)
         self.ctx = ctx
         self.window = None
         self.start_hidden = start_hidden
@@ -153,8 +152,10 @@ class App(Adw.Application):
 
     def do_activate(self):
         if not self.window:
+            # The theme is designed for dark only, so it doesn't follow the system setting.
+            Adw.StyleManager.get_default().set_color_scheme(Adw.ColorScheme.FORCE_DARK)
             provider = Gtk.CssProvider()
-            provider.load_from_string(CSS)
+            provider.load_from_path(str(pathlib.Path(__file__).with_name("theme.css")))
             Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
             self.window = Window(self, self.ctx)
             self.window.update_background()

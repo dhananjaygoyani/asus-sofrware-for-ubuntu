@@ -7,7 +7,7 @@ import shutil
 from gi.repository import Adw, GLib, Gtk
 
 from .. import effects
-from .widgets import CurveView, attribute_row, stat_tile
+from .widgets import CurveView, Gauge, attribute_row, stat_tile
 
 GPU_ATTRIBUTES = ("dgpu_disable", "gpu_mux_mode", "egpu_enable", "egpu_connected", "dgpu_power_state", "mini_led_mode")
 POWER_PREFIXES = ("ppt_", "nv_", "apu_mem")
@@ -50,55 +50,120 @@ class Page:
         """Called at the frame rate while visible."""
 
 
+PROFILE_ICONS = {
+    "quiet": "power-profile-power-saver-symbolic",
+    "low-power": "power-profile-power-saver-symbolic",
+    "cool": "power-profile-power-saver-symbolic",
+    "balanced": "power-profile-balanced-symbolic",
+    "balanced-performance": "power-profile-balanced-symbolic",
+    "performance": "power-profile-performance-symbolic",
+}
+
+
+def apply_profile(ctx, choice, done):
+    """Change the profile and remember it. Used by every control that offers one."""
+
+    def finished(ok):
+        if ok:
+            ctx.config["profile"] = choice
+        done(ok)
+
+    ctx.submit([ctx.write_op("profile", "/sys/firmware/acpi/platform_profile", choice)], finished)
+
+
 class DashboardPage(Page):
-    title = "Dashboard"
-    icon = "speedometer-symbolic"
+    title = "Home"
+    icon = "go-home-symbolic"
 
     def __init__(self, ctx):
         super().__init__(ctx)
-        page = Adw.PreferencesPage()
-        self.widget = page
+        self.updating = False
+        self.mode_buttons = {}
+        body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14, margin_top=18, margin_bottom=24, margin_start=18, margin_end=18)
+        clamp = Adw.Clamp(maximum_size=1180, child=body)
+        self.widget = Gtk.ScrolledWindow(child=clamp, hscrollbar_policy=Gtk.PolicyType.NEVER)
+
         identity = ctx.hw.identity()
-        head = Adw.PreferencesGroup(
-            title=identity["product"] or "This laptop",
-            description=f"Board {identity['board']} · Firmware {identity['bios']}",
-        )
-        grid = Gtk.FlowBox(selection_mode=Gtk.SelectionMode.NONE, column_spacing=12, row_spacing=12, homogeneous=True, min_children_per_line=2, max_children_per_line=4)
-        self.tiles = {}
-        for key, title in (("cpu", "CPU temperature"), ("igpu", "Integrated GPU"), ("dgpu", "Discrete GPU"), ("profile", "Performance profile"), ("battery", "Battery")):
-            box, value, detail = stat_tile(title)
-            grid.append(box)
-            self.tiles[key] = (value, detail)
-        self.fan_tiles = {}
-        for label, _rpm in ctx.hw.fans():
-            box, value, detail = stat_tile(label)
-            grid.append(box)
-            self.fan_tiles[label] = (value, detail)
-        box, value, detail = stat_tile("Keyboard")
-        grid.append(box)
-        self.tiles["keyboard"] = (value, detail)
-        head.add(grid)
-        page.add(head)
+        body.append(Gtk.Label(label=(identity["product"] or "This laptop").upper(), xalign=0, css_classes=["home-title"]))
+        body.append(Gtk.Label(label=f"Board {identity['board']} · Firmware {identity['bios']}", xalign=0, css_classes=["dim-label", "caption"]))
 
         conflicts = ctx.hw.conflicts()
         if conflicts:
-            warn = Adw.PreferencesGroup(title="Heads up")
-            warn.add(Adw.ActionRow(title=f"{', '.join(conflicts)} is running", subtitle="It controls the same hardware, so settings may fight. Stop it before relying on OpenArmoury."))
-            page.add(warn)
+            body.append(Gtk.Label(label=f"{', '.join(conflicts)} is running and controls the same hardware, so settings may fight.", xalign=0, wrap=True, css_classes=["warning"]))
+
+        choices = ctx.hw.profile_choices()
+        if choices:
+            body.append(Gtk.Label(label="OPERATING MODE", xalign=0, css_classes=["section-title"]))
+            row = Gtk.Box(spacing=10, homogeneous=True)
+            leader = None
+            for choice in choices:
+                content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, halign=Gtk.Align.CENTER, valign=Gtk.Align.CENTER)
+                image = Gtk.Image(icon_name=PROFILE_ICONS.get(choice, "power-profile-balanced-symbolic"), pixel_size=26)
+                image.set_accessible_role(Gtk.AccessibleRole.PRESENTATION)
+                content.append(image)
+                content.append(Gtk.Label(label=PROFILE_LABELS.get(choice, choice.title())))
+                button = Gtk.ToggleButton(child=content, group=leader, css_classes=["mode-tile"])
+                button.update_property([Gtk.AccessibleProperty.LABEL], [f"{PROFILE_LABELS.get(choice, choice.title())} mode"])
+                leader = leader or button
+                button.connect("toggled", self._mode_toggled, choice)
+                row.append(button)
+                self.mode_buttons[choice] = button
+            body.append(row)
+
+        body.append(Gtk.Label(label="LIVE", xalign=0, css_classes=["section-title"], margin_top=6))
+        gauges = Gtk.FlowBox(selection_mode=Gtk.SelectionMode.NONE, column_spacing=10, row_spacing=10, homogeneous=True, min_children_per_line=2, max_children_per_line=6)
+        self.gauges = {"cpu": Gauge("CPU", "°C", 100), "load": Gauge("CPU load", "%", 100), "memory": Gauge("Memory", "%", 100)}
+        if ctx.hw.igpu_temp() is not None:
+            self.gauges["igpu"] = Gauge("Integrated GPU", "°C", 100)
+        self.fan_gauges = {}
+        for label, _rpm in ctx.hw.fans():
+            self.fan_gauges[label] = Gauge(label, "rpm", 7000)
+        for gauge in list(self.gauges.values()) + list(self.fan_gauges.values()):
+            gauges.append(self._card(gauge))
+        body.append(gauges)
+
+        body.append(Gtk.Label(label="STATUS", xalign=0, css_classes=["section-title"], margin_top=6))
+        grid = Gtk.FlowBox(selection_mode=Gtk.SelectionMode.NONE, column_spacing=10, row_spacing=10, homogeneous=True, min_children_per_line=2, max_children_per_line=4)
+        self.tiles = {}
+        for key, title in (("dgpu", "Discrete GPU"), ("battery", "Battery"), ("keyboard", "Keyboard"), ("profile", "Current mode")):
+            box, value, detail = stat_tile(title)
+            grid.append(box)
+            self.tiles[key] = (value, detail)
+        body.append(grid)
         self.refresh()
+
+    @staticmethod
+    def _card(child):
+        box = Gtk.Box(css_classes=["home-card"])
+        box.append(child)
+        return box
+
+    def _mode_toggled(self, button, choice):
+        if not self.updating and button.get_active():
+            apply_profile(self.ctx, choice, lambda _ok: self.refresh())
 
     def refresh(self):
         hw = self.ctx.hw
-        cpu = hw.cpu_temp()
-        self.tiles["cpu"][0].set_label(f"{cpu:.0f} °C" if cpu is not None else "–")
-        igpu = hw.igpu_temp()
-        self.tiles["igpu"][0].set_label(f"{igpu:.0f} °C" if igpu is not None else "–")
-        gpu = self.ctx.monitor.discrete_gpu()
+        meter = self.ctx.monitor
+        self.updating = True
+        profile = hw.profile()
+        if profile in self.mode_buttons:
+            self.mode_buttons[profile].set_active(True)
+        self.updating = False
+        self.gauges["cpu"].set_value(hw.cpu_temp())
+        self.gauges["load"].set_value(meter.cpu_percent)
+        used, total = meter.memory()
+        self.gauges["memory"].set_value(100 * used / total if total else None)
+        if "igpu" in self.gauges:
+            self.gauges["igpu"].set_value(hw.igpu_temp())
+        for label, rpm in hw.fans():
+            if label in self.fan_gauges:
+                self.fan_gauges[label].set_value(rpm)
+        self.tiles["profile"][0].set_label(PROFILE_LABELS.get(profile, profile or "–"))
+        gpu = meter.discrete_gpu()
         states = {"suspended": "Asleep", "active": "Awake"}
         self.tiles["dgpu"][0].set_label(states.get(gpu["state"], gpu["state"].title()) if gpu else "None")
         self.tiles["dgpu"][1].set_label(f"{gpu['vendor']}. Temperature isn't read, to avoid waking it" if gpu else "")
-        profile = hw.profile()
-        self.tiles["profile"][0].set_label(PROFILE_LABELS.get(profile, profile or "–"))
         battery = hw.battery()
         if battery:
             self.tiles["battery"][0].set_label(f"{battery['capacity']}%")
@@ -106,9 +171,6 @@ class DashboardPage(Page):
             self.tiles["battery"][1].set_label(f"{battery['status']}{limit}")
         else:
             self.tiles["battery"][1].set_label("No battery found")
-        for label, rpm in hw.fans():
-            if label in self.fan_tiles:
-                self.fan_tiles[label][0].set_label(f"{rpm:,} rpm")
         board = self.ctx.board
         names = {"zone": f"{board.zone_count} zones", "per-key": "Per-key", "single": "Single colour", "brightness": "Brightness only"}
         self.tiles["keyboard"][0].set_label(names[board.kind])
@@ -173,12 +235,7 @@ class PerformancePage(Page):
         if self.updating or not button.get_active():
             return
 
-        def done(ok):
-            if ok:
-                self.ctx.config["profile"] = choice
-            self.refresh()
-
-        self.ctx.submit([self.ctx.write_op("profile", "/sys/firmware/acpi/platform_profile", choice)], done)
+        apply_profile(self.ctx, choice, lambda _ok: self.refresh())
 
     def refresh(self):
         self.updating = True

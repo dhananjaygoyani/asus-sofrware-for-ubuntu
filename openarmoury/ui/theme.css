@@ -1,0 +1,51 @@
+/* OpenArmoury's own dark gaming theme. */
+@define-color accent_bg_color #d90429;
+@define-color accent_fg_color #ffffff;
+@define-color accent_color #ff4d6a;
+@define-color destructive_bg_color #d90429;
+@define-color window_bg_color #0d0e12;
+@define-color window_fg_color #eceef2;
+@define-color view_bg_color #14161c;
+@define-color view_fg_color #eceef2;
+@define-color headerbar_bg_color #0a0b0e;
+@define-color headerbar_fg_color #eceef2;
+@define-color sidebar_bg_color #08090c;
+@define-color sidebar_fg_color #c9ccd4;
+@define-color card_bg_color #181a21;
+@define-color card_fg_color #eceef2;
+@define-color dialog_bg_color #181a21;
+@define-color dialog_fg_color #eceef2;
+@define-color popover_bg_color #1e2029;
+@define-color popover_fg_color #eceef2;
+
+.card, .boxed-list, list.boxed-list row, button, entry, .view, frame { border-radius: 4px; }
+
+.navigation-sidebar row { border-radius: 0; margin: 1px 0; padding: 8px 6px; }
+.navigation-sidebar row:hover { background: alpha(#ffffff, 0.05); }
+.navigation-sidebar row:selected {
+  background: linear-gradient(to right, alpha(@accent_bg_color, 0.35), transparent);
+  box-shadow: inset 3px 0 0 @accent_bg_color;
+  color: #ffffff;
+}
+
+.home-title { font-size: 20px; font-weight: 800; letter-spacing: 1px; }
+.section-title { font-size: 12px; font-weight: 800; letter-spacing: 2px; color: alpha(@window_fg_color, 0.6); }
+
+.mode-tile {
+  background: #181a21;
+  border: 1px solid alpha(#ffffff, 0.07);
+  padding: 18px 8px;
+  min-height: 74px;
+  font-weight: 700;
+}
+.mode-tile:hover { background: #20232c; border-color: alpha(@accent_bg_color, 0.7); }
+.mode-tile:checked {
+  background: linear-gradient(to bottom, #e30b30, #8f0520);
+  border-color: #ff3355;
+  color: #ffffff;
+  box-shadow: 0 0 14px alpha(@accent_bg_color, 0.55);
+}
+
+.home-card { background: #181a21; border: 1px solid alpha(#ffffff, 0.06); border-radius: 4px; padding: 12px; }
+.stat-tile { padding: 14px 16px; min-width: 150px; border-left: 3px solid @accent_bg_color; }
+.warning { color: @warning_color; }

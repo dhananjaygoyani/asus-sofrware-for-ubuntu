@@ -17,6 +17,7 @@ GPU_ATTRIBUTE = "/sys/class/firmware-attributes/asus-armoury/attributes/dgpu_dis
 OUT = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else "docs/screenshots")
 OUT.mkdir(parents=True, exist_ok=True)
 errors = []
+finished = []
 
 
 def _rows(widget):
@@ -47,10 +48,25 @@ def scenario(app):
     """A generator: each yield lets the UI settle for that many milliseconds."""
     window = app.window
     ctx = app.ctx
-    for title in ("Dashboard", "Performance", "Fans", "Lighting", "Light Studio", "Scenarios", "Monitor", "Macros", "System"):
+    for title in ("Home", "Performance", "Fans", "Lighting", "Light Studio", "Scenarios", "Monitor", "Macros", "System"):
         window.show_page(title)
         yield 700
         capture(window, title.lower().replace(" ", "-"))
+
+    # Home: a mode tile changes the profile, and the tiles follow changes made elsewhere.
+    window.show_page("Home")
+    home = page_named(window, "Home")
+    home.mode_buttons["performance"].set_active(True)
+    yield 400
+    assert ctx.hw.profile() == "performance", "mode tile did not change the profile"
+    assert all(g.value is not None for g in home.gauges.values()), "a gauge has no reading"
+    capture(window, "home-performance")
+    window.show_page("Performance")
+    page_named(window, "Performance").buttons["balanced"].set_active(True)
+    yield 400
+    window.show_page("Home")
+    yield 200
+    assert home.mode_buttons["balanced"].get_active(), "mode tile out of step"
 
     # Performance: change the profile through the helper, into the mock tree.
     window.show_page("Performance")
@@ -205,6 +221,20 @@ def scenario(app):
     yield 300
     assert ctx.hw.battery()["limit"] == 75
 
+    # Cancelling a mode tile puts it back on the real mode.
+    window.show_page("Home")
+    yield 200
+    before = ctx.hw.profile()
+    other = next(c for c in home.mode_buttons if c != before)
+    ctx.config["approved"] = []
+    home.mode_buttons[other].set_active(True)
+    yield 400
+    dialog = window.get_visible_dialog()
+    assert dialog is not None, "mode tile skipped the gate"
+    dialog.close()
+    yield 400
+    assert home.mode_buttons[before].get_active() and ctx.hw.profile() == before, "tile stayed on a cancelled mode"
+
     # Cancelling a switch puts it back, so it can't claim a change that didn't happen.
     window.show_page("Performance")
     yield 200
@@ -244,6 +274,7 @@ def drive(app):
         try:
             delay = next(steps)
         except StopIteration:
+            finished.append(True)
             app.window.close()
             app.quit()
             return False
@@ -268,7 +299,8 @@ def main():
         app = App(ctx)
         app.connect("activate", lambda a: GLib.idle_add(drive, a))
         app.run([])
-    if errors:
+    if errors or not finished:
+        print("scenario did not finish", file=sys.stderr)
         sys.exit(1)
     print("all scenarios passed")
 

@@ -102,3 +102,9 @@ def test_other_programs_run_are_a_known_short_list():
     for path in SOURCE.rglob("*.py"):
         if path.name not in allowed:
             assert "subprocess" not in path.read_text(), path
+
+
+def test_demo_never_shares_an_instance_with_the_real_app():
+    """A shared instance would turn --demo into a window onto real hardware."""
+    text = (SOURCE / "ui" / "app.py").read_text()
+    assert "NON_UNIQUE" in text and "not ctx.is_demo" in text
