@@ -1,5 +1,6 @@
 """Lighting (built-in effects) and Light Studio (software effects) pages."""
 import copy
+import math
 
 from gi.repository import Adw, Gtk
 
@@ -70,10 +71,59 @@ class LightingPage(Page):
             self.brightness_row.set_subtitle("No keyboard backlight found.")
         page.add(group)
 
+        self._power_group(page)
+
         for row in (self.mode_row, self.speed_row, self.direction_row):
             row.connect("notify::selected", lambda *_a: self._update_rows())
         ctx.board_listeners.append(self.rebuild)
         self.rebuild()
+
+    def _power_group(self, page):
+        """Which lights stay on at boot, while awake, during sleep and at shutdown."""
+        board = self.ctx.board
+        model = board.power_model
+        if not model:
+            return
+        saved = self.ctx.config["power_states"] or {}
+        moments = [("boot", "at boot"), ("awake", "while awake"), ("sleep", "during sleep")]
+        if model == "current":
+            moments.append(("shutdown", "at shutdown"))
+        zones = [("keyboard", "Keyboard")] + ([("lightbar", "Lightbar")] if board.has_lightbar else [])
+        group = Adw.PreferencesGroup(title="When the lights are on")
+        if model == "legacy":
+            group.set_description("On this keyboard, boot and sleep lighting are shared by the keyboard and lightbar.")
+        self.power_rows = {}
+        for zone, zone_title in zones:
+            for moment, moment_title in moments:
+                if model == "legacy" and zone == "lightbar" and moment != "awake":
+                    continue
+                title = f"{zone_title} {moment_title}" if model == "current" or moment == "awake" else f"Lights {moment_title}"
+                row = Adw.SwitchRow(title=title, active=saved.get(zone, {}).get(moment, True))
+                group.add(row)
+                self.power_rows[(zone, moment)] = row
+        button = Gtk.Button(label="Apply", halign=Gtk.Align.END, margin_top=12)
+        button.connect("clicked", self._apply_power)
+        group.add(button)
+        page.add(group)
+
+    def _apply_power(self, _button):
+        board = self.ctx.board
+        states = {}
+        for (zone, moment), row in self.power_rows.items():
+            states.setdefault(zone, {})[moment] = row.get_active()
+        legacy = board.power_model == "legacy"
+        if legacy and "lightbar" in states:
+            # These are one shared setting on this keyboard, so both zones must agree.
+            states["lightbar"]["boot"] = states["keyboard"]["boot"]
+            states["lightbar"]["sleep"] = states["keyboard"]["sleep"]
+        packet = packets.power_state(states, legacy, board.interface["transport"][1])
+
+        def done(ok):
+            if ok:
+                self.ctx.config["power_states"] = states
+                self.ctx.toast("Lighting states applied.")
+
+        self.ctx.submit([self.ctx.hid_op("power-state", packet, board.uncertain_reason("power-state"))], done)
 
     def rebuild(self):
         board = self.ctx.board
@@ -153,7 +203,7 @@ class LightingPage(Page):
         settings = self._settings()
         keys = self.ctx.board.light_keys()
         if self.ctx.live_effect:
-            frame = effects.render(self.ctx.live_effect, keys, now, self.ctx.hw.cpu_temp())
+            frame = self.ctx.render(self.ctx.live_effect, now)
         else:
             frame = effects.preview_builtin(settings["mode"], settings["colour"], settings["speed"], settings["direction"], keys, now)
         level = self.brightness_row.get_selected()
@@ -211,6 +261,7 @@ class StudioPage(Page):
         self.stack.add_titled_with_icon(self._paint_tab(), "paint", "Paint", "document-edit-symbolic")
         self.stack.add_titled_with_icon(self._keyframe_tab(), "keyframes", "Keyframes", "media-playback-start-symbolic")
         self.stack.add_titled_with_icon(self._smart_tab(), "smart", "Smart", "dialog-information-symbolic")
+        self.stack.add_titled_with_icon(self._music_tab(), "music", "Music", "audio-x-generic-symbolic")
         self.stack.add_titled_with_icon(self._presets_tab(), "presets", "Presets", "view-list-symbolic")
         self.stack.connect("notify::visible-child-name", self._tab_changed)
         ctx.board_listeners.append(self.rebuild)
@@ -234,12 +285,22 @@ class StudioPage(Page):
             self._use(self.keyframes)
         elif name == "smart":
             self._use(self.smart)
+        elif name == "music":
+            self._use(self.music)
 
     def _use(self, effect):
         self.effect = effect
         self.ctx.config["studio_effect"] = effect
+        self._sync_meter()
         if self.ctx.live_effect:
             self.ctx.live_effect = effect
+
+    def _sync_meter(self):
+        """Listen to audio only while a music effect is actually in use."""
+        if self.effect.get("kind") == "music" or (self.ctx.live_effect or {}).get("kind") == "music":
+            self.ctx.meter.start()
+        else:
+            self.ctx.meter.stop()
 
     # Paint
 
@@ -364,21 +425,28 @@ class StudioPage(Page):
     def _smart_tab(self):
         self.smart = copy.deepcopy(self.effect if self.effect.get("kind") == "smart" else effects.BUILTIN_PRESETS["Temperature"])
         page = Adw.PreferencesPage()
-        group = Adw.PreferencesGroup(title="Colour follows CPU temperature")
-        self.smart_now = Adw.ActionRow(title="CPU now")
+        group = Adw.PreferencesGroup(title="Colour follows a sensor")
+        self.sources = [("cpu_temp", "CPU temperature"), ("cpu_load", "CPU load"), ("igpu_temp", "Integrated GPU temperature"), ("battery", "Battery level")]
+        source_row = _combo("Follow", [label for _k, label in self.sources], [k for k, _l in self.sources].index(self.smart.get("source", "cpu_temp")))
+        source_row.connect("notify::selected", self._source_changed)
+        group.add(source_row)
+        self.smart_now = Adw.ActionRow(title="Reading now")
         self.smart_label = Gtk.Label(label="–", css_classes=["dim-label"])
         self.smart_now.add_suffix(self.smart_label)
         group.add(self.smart_now)
-        for key, title, kind in (("low", "Cool at", "cold"), ("high", "Hot at", "hot")):
-            row = Adw.SpinRow.new_with_range(20, 110, 1)
+        for key, title, kind in (("low", "First colour at", "cold"), ("high", "Second colour at", "hot")):
+            row = Adw.SpinRow.new_with_range(0, 110, 1)
             row.set_title(title)
-            row.set_subtitle("°C")
             row.set_value(self.smart[key])
             row.connect("notify::value", self._smart_changed, key)
             row.add_suffix(colour_button(self.smart[kind], lambda c, k=kind: self._smart_colour(k, c)))
             group.add(row)
         page.add(group)
         return page
+
+    def _source_changed(self, row, _p):
+        self.smart["source"] = self.sources[row.get_selected()][0]
+        self._use(self.smart)
 
     def _smart_changed(self, row, _p, key):
         self.smart[key] = row.get_value()
@@ -387,6 +455,33 @@ class StudioPage(Page):
     def _smart_colour(self, key, colour):
         self.smart[key] = colour
         self._use(self.smart)
+
+    # Music
+
+    def _music_tab(self):
+        self.music = copy.deepcopy(effects.BUILTIN_PRESETS["Music"])
+        page = Adw.PreferencesPage()
+        group = Adw.PreferencesGroup(title="React to sound", description="Listens to what your laptop is playing, not your microphone. Only the loudness is used, and nothing is recorded.")
+        if not self.ctx.meter.available():
+            group.add(Adw.ActionRow(title="Not available", subtitle="This needs PipeWire's pw-record."))
+        style = _combo("Style", ["Bars from the middle", "Whole keyboard pulses"])
+        style.connect("notify::selected", lambda r, _p: self._music_set("style", ["bars", "pulse"][r.get_selected()]))
+        group.add(style)
+        for key, title in (("quiet", "Quiet colour"), ("loud", "Loud colour")):
+            row = Adw.ActionRow(title=title)
+            row.add_suffix(colour_button(self.music[key], lambda c, k=key: self._music_set(k, c)))
+            group.add(row)
+        sensitivity = Adw.SpinRow.new_with_range(0.5, 5, 0.1)
+        sensitivity.set_title("Sensitivity")
+        sensitivity.set_value(self.music["sensitivity"])
+        sensitivity.connect("notify::value", lambda r, _p: self._music_set("sensitivity", r.get_value()))
+        group.add(sensitivity)
+        page.add(group)
+        return page
+
+    def _music_set(self, key, value):
+        self.music[key] = value
+        self._use(self.music)
 
     # Presets
 
@@ -440,6 +535,8 @@ class StudioPage(Page):
             self._rebuild_key_rows()
         elif effect["kind"] == "smart":
             self.smart = effect
+        elif effect["kind"] == "music":
+            self.music = effect
         self._use(effect)
 
     def _save_preset(self, _button):
@@ -473,6 +570,7 @@ class StudioPage(Page):
             self.ctx.start_live(self.effect, done)
         else:
             self.ctx.stop_live()
+            self._sync_meter()
             saved = self.ctx.config["lighting"]
             if saved:
                 self.ctx.submit(effect_ops(self.ctx, saved))
@@ -480,9 +578,10 @@ class StudioPage(Page):
                 self.ctx.toast("The keyboard keeps the last colours until you apply an effect.")
 
     def tick(self, now):
-        keys = self.ctx.board.light_keys()
-        frame = effects.render(self.effect, keys, now, self.ctx.hw.cpu_temp())
-        self.view.set_frame(frame)
-        temperature = self.ctx.hw.cpu_temp()
-        if temperature is not None:
-            self.smart_label.set_label(f"{temperature:.0f} °C")
+        if self.ctx.is_demo:
+            self.ctx.meter.level = abs(math.sin(now * 2.5)) * 0.8
+        self.view.set_frame(self.ctx.render(self.effect, now))
+        reading = self.ctx.effect_input(self.smart)
+        if reading is not None:
+            unit = {"cpu_load": "%", "battery": "%"}.get(self.smart.get("source"), " °C")
+            self.smart_label.set_label(f"{reading:.0f}{unit}")

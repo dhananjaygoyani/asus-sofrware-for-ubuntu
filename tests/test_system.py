@@ -90,8 +90,15 @@ def test_never_calls_into_the_dgpu(word):
         assert word not in path.read_text(), path
 
 
-def test_only_the_helper_uses_privileged_commands():
+def test_only_the_writer_starts_the_privileged_helper():
     for path in SOURCE.rglob("*.py"):
-        text = path.read_text()
         if path.name != "writer.py":
-            assert "pkexec\"" not in text and "subprocess" not in text, path
+            assert "pkexec" not in path.read_text(), path
+
+
+def test_other_programs_run_are_a_known_short_list():
+    """Anything launched outside the helper should be easy to audit."""
+    allowed = {"audio.py", "desktop.py", "writer.py"}
+    for path in SOURCE.rglob("*.py"):
+        if path.name not in allowed:
+            assert "subprocess" not in path.read_text(), path

@@ -139,6 +139,23 @@ class Hardware:
             }
         return None
 
+    def on_battery(self):
+        """True only when a mains supply reports it's unplugged."""
+        for path in self._glob("/sys/class/power_supply/*"):
+            if self.read(f"{path}/type") == "Mains":
+                return self.read(f"{path}/online") == "0"
+        return False
+
+    def battery_health(self):
+        """Current full capacity as a share of its design capacity, and the cycle count."""
+        for path in self.batteries():
+            for full, design in (("energy_full", "energy_full_design"), ("charge_full", "charge_full_design")):
+                now, new = self.read_int(f"{path}/{full}"), self.read_int(f"{path}/{design}")
+                if now and new:
+                    return {"percent": 100 * now / new, "cycles": self.read_int(f"{path}/cycle_count")}
+            return {"percent": None, "cycles": self.read_int(f"{path}/cycle_count")}
+        return None
+
     def armoury_attributes(self):
         """Every firmware attribute, whatever the kernel exposes. Unreadable fields become None."""
         attributes = []

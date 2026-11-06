@@ -183,6 +183,18 @@ Neither direct path below sends `b4` or `b5` in the code read.
 
 Use `/sys/class/leds/asus::kbd_backlight` for brightness. It already works and needs no hidraw.
 
+### Power states, from the second analysis
+
+`ArmouryCrate.AuraPlugin.dll` (SHA-256 `88eefb3e5116c070`), function `0x180241600`, reads the current state back with
+`ID 9E 01 15` (or `20`) followed by Get Feature.
+
+| Fact | Evidence | Label |
+|---|---|---|
+| Reply byte `0x16` bits: `02` keyboard boot, `08` awake, `20` sleep, `80` shutdown; `01` and `04` logo | `0x180241600` | CONFIRMED: matches asusctl's `new_to_byte` for current keyboards |
+| Reply also holds the current mode (byte 6), colour (7–9), speed (10), direction (11), second colour (13–15) | `0x180241600` | RE-ONLY, not used |
+| Sending uses `5D BD 01` + 4 flag bytes | asusctl only; the sender wasn't located | UNCERTAIN |
+| `0x1866` layout: `08 00 02 00` keyboard awake, `04 05 02 00` lightbar awake, `FF 1F 0F 00` all | asusctl tests only | UNCERTAIN, shown with a warning before use |
+
 ## 9. Not to be used
 
 | Packet | Observed | Label |

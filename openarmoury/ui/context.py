@@ -5,7 +5,7 @@ from typing import Callable, Optional
 
 from gi.repository import Adw, GLib, Gtk
 
-from .. import effects, hid, keyboard, packets, system
+from .. import audio, effects, hid, keyboard, monitor, packets, system
 from ..writer import WriteError
 
 
@@ -20,8 +20,26 @@ class Op:
     uncertain: Optional[str] = None
 
 
+class FakeMeter:
+    """Sound level for demo mode, so it doesn't listen to your real audio."""
+
+    level = 0.0
+
+    def available(self):
+        return True
+
+    def start(self):
+        pass
+
+    def stop(self):
+        pass
+
+
 class Context:
-    def __init__(self, hw, config, helper, writer, demo_root=None):
+    def __init__(self, hw, config, helper, writer, desktop, demo_root=None):
+        self.desktop = desktop
+        self.monitor = monitor.Monitor(hw)
+        self.meter = FakeMeter() if demo_root else audio.MusicMeter()
         self.hw = hw
         self.config = config
         self.helper = helper
@@ -52,6 +70,21 @@ class Context:
         self.board = self._make_board()
         for listener in self.board_listeners:
             listener()
+
+    def effect_input(self, effect):
+        """The sensor reading an effect follows."""
+        source = effect.get("source", "cpu_temp")
+        if source == "cpu_load":
+            return self.monitor.cpu_percent
+        if source == "igpu_temp":
+            return self.hw.igpu_temp()
+        if source == "battery":
+            battery = self.hw.battery()
+            return battery["capacity"] if battery else None
+        return self.hw.cpu_temp()
+
+    def render(self, effect, now):
+        return effects.render(effect, self.board.light_keys(), now, self.effect_input(effect), self.meter.level)
 
     def toast(self, message):
         if self.toasts:
@@ -160,7 +193,7 @@ class Context:
         if not board.can_color:
             self.toast("This keyboard only supports brightness.")
             return
-        frame = effects.render(effect, board.light_keys(), 0.0, self.hw.cpu_temp())
+        frame = self.render(effect, 0.0)
         ops = self._frame_ops(frame, first=True, uncertain=board.uncertain_reason("direct"))
 
         def started(ok):
@@ -195,7 +228,7 @@ class Context:
         """Called by the app timer. Drops the frame if the last is still sending, or if it's too soon."""
         if not self.live_effect or self.frame_busy or not self.limiter.allow(now):
             return
-        frame = effects.render(self.live_effect, self.board.light_keys(), now, self.hw.cpu_temp())
+        frame = self.render(self.live_effect, now)
         self.frame_busy = True
         ops = self._frame_ops(frame)
 
@@ -256,6 +289,7 @@ class Context:
 
     def close(self):
         self.stop_live()
+        self.meter.stop()
         self.executor.shutdown(wait=True)
         self.helper.close()
 

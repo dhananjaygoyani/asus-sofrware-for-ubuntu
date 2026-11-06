@@ -40,21 +40,27 @@ def main():
         interface = ctx.board.interface
         print("interface", interface and (interface["node"], interface["product"], interface["transport"]))
         print("conflicts", hw.conflicts())
+        print("dgpu", ctx.monitor.discrete_gpu(), "power", ctx.monitor.battery_watts(), "disk", ctx.monitor.disk_temp())
+        print("memory", ctx.monitor.memory(), "mhz", ctx.monitor.cpu_mhz(), "on_battery", hw.on_battery(), "health", hw.battery_health())
+        print("rates", ctx.desktop.refresh_rates(), "touchpad", ctx.desktop.touchpad(), "win", ctx.desktop.win_key(), "night", ctx.desktop.night_light(), "mic", ctx.desktop.mic_muted())
+        print("rog", repr(ctx.desktop.shortcut("rog-key")), "top", [p["name"] for p in ctx.monitor.top_processes(__import__("os").getuid())][:4])
+        from openarmoury import games
+        print("games", [g["name"] for g in games.all_games(__import__("os").path.expanduser("~"))][:8], "power_model", ctx.board.power_model)
 
         def run():
             window = app.window
-            names = ["dashboard", "performance", "fans", "lighting", "studio", "system"]
+            names = [page.title for page in window.pages]
 
             def step(index=0):
                 if index:
-                    capture(window, names[index - 1])
+                    capture(window, names[index - 1].lower().replace(" ", "-"))
                 if index == len(names):
                     assert ctx.helper.process is None, "helper was started"
                     print("helper started:", ctx.helper.process is not None)
                     window.close()
                     app.quit()
                     return False
-                window.show_page(index)
+                window.show_page(names[index])
                 GLib.timeout_add(500, step, index + 1)
                 return False
 

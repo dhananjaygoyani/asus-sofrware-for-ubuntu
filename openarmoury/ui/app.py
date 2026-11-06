@@ -10,6 +10,8 @@ from gi.repository import Adw, Gdk, GLib, Gtk  # noqa: E402
 from .. import demo  # noqa: E402
 from ..effects import FRAME_INTERVAL  # noqa: E402
 from .context import Context  # noqa: E402
+from .automation import Automation  # noqa: E402
+from .extras import MacrosPage, MonitorPage, ScenariosPage  # noqa: E402
 from .lighting import LightingPage, StudioPage  # noqa: E402
 from .pages import DashboardPage, FansPage, PerformancePage, SystemPage  # noqa: E402
 
@@ -18,7 +20,7 @@ CSS = """
 .stat-tile { padding: 14px 16px; min-width: 150px; }
 .warning { color: @warning_color; }
 """
-PAGES = (DashboardPage, PerformancePage, FansPage, LightingPage, StudioPage, SystemPage)
+PAGES = (DashboardPage, PerformancePage, FansPage, LightingPage, StudioPage, ScenariosPage, MonitorPage, MacrosPage, SystemPage)
 
 
 class Window(Adw.ApplicationWindow):
@@ -26,7 +28,11 @@ class Window(Adw.ApplicationWindow):
         super().__init__(application=app, title="OpenArmoury", default_width=1040, default_height=720)
         self.ctx = ctx
         ctx.window = self
-        self.set_size_request(440, 400)
+        self.app = app
+        self.quitting = False
+        self.automation = Automation(ctx)
+        ctx.monitor.sample()
+        self.set_size_request(530, 400)
         self.pages = [page(ctx) for page in PAGES]
         self.stack = Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE, transition_duration=120)
         self.content_title = Adw.WindowTitle(title=self.pages[0].title)
@@ -73,8 +79,16 @@ class Window(Adw.ApplicationWindow):
         self.slow_source = GLib.timeout_add_seconds(2, self._slow)
         self.connect("close-request", self._closing)
 
-    def show_page(self, index):
+    def show_page(self, title):
+        index = next(i for i, page in enumerate(self.pages) if page.title == title)
         self.rows.select_row(self.rows.get_row_at_index(index))
+
+    def update_background(self):
+        self.app.set_background(self.ctx.config["run_in_background"])
+
+    def quit_app(self):
+        self.quitting = True
+        self.close()
 
     def _row_selected(self, _rows, row):
         if not row:
@@ -97,7 +111,10 @@ class Window(Adw.ApplicationWindow):
         ctx = self.ctx
         if ctx.is_demo:
             demo.tick(ctx.demo_root, ctx.hw.profile())
-        self.active.refresh()
+        ctx.monitor.sample()
+        self.automation.tick()
+        if self.get_mapped():
+            self.active.refresh()
         profile = ctx.hw.profile()
         if profile != self.last_profile:
             self.last_profile = profile
@@ -107,6 +124,10 @@ class Window(Adw.ApplicationWindow):
         return True
 
     def _closing(self, _window):
+        if self.ctx.config["run_in_background"] and not self.quitting:
+            self.set_visible(False)
+            return True
+        self.app.set_background(False)
         GLib.source_remove(self.frame_source)
         GLib.source_remove(self.slow_source)
         self.ctx.close()
@@ -114,10 +135,21 @@ class Window(Adw.ApplicationWindow):
 
 
 class App(Adw.Application):
-    def __init__(self, ctx):
+    def __init__(self, ctx, start_hidden=False):
         super().__init__(application_id=APP_ID)
         self.ctx = ctx
         self.window = None
+        self.start_hidden = start_hidden
+        self.holding = False
+
+    def set_background(self, enabled):
+        """Keep the app alive with no window open."""
+        if enabled and not self.holding:
+            self.hold()
+            self.holding = True
+        elif not enabled and self.holding:
+            self.release()
+            self.holding = False
 
     def do_activate(self):
         if not self.window:
@@ -125,14 +157,20 @@ class App(Adw.Application):
             provider.load_from_string(CSS)
             Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
             self.window = Window(self, self.ctx)
+            self.window.update_background()
+        if self.start_hidden:
+            self.start_hidden = False
+            return
         self.window.present()
 
 
 def build_context(demo_root=None, config_dir=None):
     from ..config import Config
+    from ..desktop import FakeDesktop, GnomeDesktop
     from ..system import Hardware
     from ..writer import Helper, Writer
 
     root = demo_root or ""
     helper = Helper(test_root=demo_root)
-    return Context(Hardware(root), Config(config_dir), helper, Writer(helper, root), demo_root)
+    desktop = FakeDesktop() if demo_root else GnomeDesktop()
+    return Context(Hardware(root), Config(config_dir), helper, Writer(helper, root), desktop, demo_root)

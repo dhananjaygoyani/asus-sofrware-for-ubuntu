@@ -113,6 +113,7 @@ def test_test_root_ignored_as_root(monkeypatch):
         bytes.fromhex("5db5").ljust(64, b"\x00"),
         bytes.fromhex("5dbc00").ljust(64, b"\x00"),
         bytes.fromhex("5abac5c403").ljust(64, b"\x00"),
+        bytes.fromhex("5dbd0108000200").ljust(64, b"\x00"),
     ],
 )
 def test_allowed_packets(packet):
@@ -127,7 +128,9 @@ def test_allowed_packets(packet):
         bytes(64),
         bytes.fromhex("01b3").ljust(64, b"\x00"),  # wrong report
         bytes.fromhex("5ab3").ljust(64, b"\x00"),  # lighting opcode on the wrong report
-        bytes.fromhex("5dbd01ffffffff").ljust(64, b"\x00"),  # power states are uncertain
+        bytes.fromhex("5dbd02ffffffff").ljust(64, b"\x00"),  # power state sub-command
+        bytes.fromhex("5dbd0108000200ff").ljust(64, b"\x00"),  # data after the flags
+        bytes.fromhex("5abd0108000200").ljust(64, b"\x00"),
         bytes.fromhex("5dd108").ljust(64, b"\x00"),
         bytes.fromhex("5dc2").ljust(64, b"\x00"),
         bytes.fromhex("5de6").ljust(64, b"\x00"),
@@ -177,3 +180,27 @@ def test_real_process_speaks_json_and_survives_bad_input(tree):
     replies = [json.loads(line)["ok"] for line in process.stdout.splitlines()]
     assert replies == [False, True, False, False, True, False, False]
     assert pathlib.Path(tree + "/sys/firmware/acpi/platform_profile").read_text().strip() == "quiet"
+
+
+def test_macro_events_are_bounded():
+    helper.check_key_events([[30, 1, 0], [30, 0, 50]])
+    for bad in (
+        [],
+        "x",
+        [[30, 1]],
+        [[0, 1, 0]],
+        [[249, 1, 0]],  # above the keyboard range
+        [[30, 2, 0]],
+        [[30, 1, -1]],
+        [[30, 1, 5001]],
+        [[30, True, 0]],
+        [[30, 1, 5000]] * 13,  # over a minute in total
+        [[30, 1, 0]] * 513,
+    ):
+        with pytest.raises(helper.Refused):
+            helper.check_key_events(bad)
+
+
+def test_macro_runs_in_test_mode(tree):
+    helper.handle({"op": "keys", "events": [[30, 1, 0], [30, 0, 10]]})
+    assert "[30, 1, 0]" in pathlib.Path(tree + "/dev/uinput").read_text()

@@ -84,3 +84,23 @@ def tuf_rgb_mode(mode, colour, speed_index=1, save=False):
 def is_live_safe(packet):
     """Only direct packets may be streamed by animations. They don't persist."""
     return len(packet) >= 2 and packet[0] == REPORT and packet[1] == OP_DIRECT
+
+
+def power_state(states, legacy, length=64):
+    """Which lights stay on at boot, awake, sleep and shutdown. states maps keyboard/lightbar to on/off dicts."""
+    value = 0
+    for zone, state in states.items():
+        boot, awake, sleep, shutdown = (bool(state.get(k)) for k in ("boot", "awake", "sleep", "shutdown"))
+        if legacy:
+            value |= (0xC31209 if boot else 0) | (0x300804 if sleep else 0)
+            if awake:
+                value |= 0x000002 | (0x080000 if zone == "keyboard" else 0x040500)
+        elif zone == "keyboard":
+            value |= boot << 1 | awake << 3 | sleep << 5 | shutdown << 7
+        else:
+            value |= boot << 9 | awake << 10 | sleep << 11 | shutdown << 12
+    if legacy:
+        flags = [value >> 16 & 0xFF, value >> 8 & 0xFF, value & 0xFF, 0]
+    else:
+        flags = [value & 0xFF, value >> 8 & 0xFF, value >> 16 & 0xFF, value >> 24 & 0xFF]
+    return bytes([REPORT, 0xBD, 0x01] + flags).ljust(length, b"\x00")

@@ -38,9 +38,14 @@ instead, and asks for your password once a session.
 | Dashboard | Temperatures, fan speeds, battery, profile and keyboard type |
 | Performance | Profile, GPU settings with warnings, and power limits with the kernel's own min and max |
 | Fans | Drag-to-edit curves with 8 points per fan, re-applied when you return to a profile |
-| Lighting | Built-in effects, colour, speed, direction, zones and brightness, with an animated preview |
-| Light Studio | Painting, a keyframe editor, a CPU-temperature mode and presets |
-| System | Charge limit, other firmware settings, and restoring settings at login |
+| Lighting | Built-in effects, colour, speed, direction, zones, brightness, and boot/sleep lighting, with an animated preview |
+| Light Studio | Painting, a keyframe editor, sensor-driven and music-reactive lighting, and presets |
+| Scenarios | Settings per game or program, plugged-in and battery rules, and a game library |
+| Monitor | Live CPU, memory, disk, network and power, GPU state without waking it, and closing large programs |
+| Macros | Record keys, then play them back from a button or a keyboard shortcut |
+| System | Battery care, touchpad, Win key, microphone, refresh rate, night light, ROG key, background running, and backups |
+
+[docs/features.md](docs/features.md) compares every Armoury Crate feature, including what isn't built and why.
 
 ## How it stays safe
 
@@ -59,9 +64,10 @@ Tested on one machine: ROG Strix G513QC, BIOS 331, kernel 7.0, Ubuntu 24.04.5.
 | Status | What |
 |---|---|
 | **Tested automatically** | HID descriptor parser using this laptop's real descriptor; helper whitelist; packet layouts; restore rules (`pytest`) |
-| **Tested on the mock laptop** | Every page, helper writes, the approval dialog, the live-lighting rate limit (`tests/shots.py`, under Xvfb) |
-| **Checked on the real laptop, read-only** | Model, sensors, fans, curves, profiles, attributes and keyboard interface are read correctly (`tests/real_readonly.py`) |
-| **Not yet tested on real hardware** | **Every write:** profiles, fan curves, charge limit, GPU settings, lighting, the keyboard query, `install.sh` and pkexec |
+| **Tested on the mock laptop** | Every page, helper writes, the approval dialog, the live-lighting rate limit, scenarios, macros and power states (`tests/shots.py`, under Xvfb) |
+| **Checked on the real laptop, read-only** | Model, sensors, fans, curves, profiles, attributes, keyboard interface, GPU state, refresh rates and battery health read correctly (`tests/real_readonly.py`) |
+| **Worked on the real laptop** | `install.sh`, the keyboard query and applying a built-in effect, according to the saved settings |
+| **Not yet tested on real hardware** | Profile, fan curve, charge limit and GPU writes; direct and live lighting; power states; macros; refresh rate change; touchpad, Win key and ROG key settings; background running |
 | **Unproven protocol details** | Which packet saves to flash; direct colour on this model; zone numbers; see [docs/protocol.md](docs/protocol.md) |
 | **Other ASUS laptops** | Untested. Model data comes from asusctl, and detection is designed to fall back to fewer features |
 
@@ -69,7 +75,10 @@ Tested on one machine: ROG Strix G513QC, BIOS 331, kernel 7.0, Ubuntu 24.04.5.
 
 - Per-key painting needs a key layout. asusctl provides 18. A per-key model without one gets everything else, but
   no key painting.
-- Lighting power states (boot and sleep) aren't offered, because they're unproven.
+- Lighting power states (boot and sleep) on older keyboards come from asusctl only, so they show a warning first.
+- The Win key setting only stops Activities opening. Win+ shortcuts still work.
+- Refresh rate control needs GNOME. Scenarios and battery rules need the app running, or "Keep running" on.
+- Macros play through the root helper, so they may ask for your password. They're stored as plain text.
 - Restoring at login asks for your password if it has to change anything besides lighting. Software effects
   from Light Studio need the app running.
 - CPU power limits show as unavailable where the kernel has no limits for your model, which includes the G513QC.

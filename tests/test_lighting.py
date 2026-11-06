@@ -173,3 +173,41 @@ def test_layouts_start_at_zero():
     layouts = json.loads((pathlib.Path(keyboard.__file__).parent / "data" / "asusctl" / "layouts.json").read_text())
     for name, keys in layouts.items():
         assert min(k["x"] for k in keys) == 0 and min(k["y"] for k in keys) == 0, name
+
+
+def test_power_state_matches_asusctl_legacy_vectors():
+    def flags(states):
+        return packets.power_state(states, legacy=True)[3:7].hex()
+
+    assert flags({"keyboard": {"awake": True}}) == "08000200"
+    assert flags({"lightbar": {"awake": True}}) == "04050200"
+    both = {"boot": True, "awake": True, "sleep": True}
+    assert flags({"keyboard": both, "lightbar": both}) == "ff1f0f00"
+
+
+def test_power_state_matches_vendor_bits_on_current_keyboards():
+    def first(state):
+        return packets.power_state({"keyboard": state}, legacy=False)[3]
+
+    assert first({"boot": True}) == 0x02
+    assert first({"awake": True}) == 0x08
+    assert first({"sleep": True}) == 0x20
+    assert first({"shutdown": True}) == 0x80
+    assert packets.power_state({"keyboard": {}}, legacy=False)[:3] == bytes.fromhex("5dbd01")
+    assert len(packets.power_state({"keyboard": {}}, legacy=False)) == 64
+
+
+def test_power_model_comes_from_product():
+    assert keyboard.Keyboard({"product": "1866", "transport": ("output", 64)}).power_model == "legacy"
+    assert keyboard.Keyboard({"product": "19b6", "transport": ("output", 64)}).power_model == "current"
+    assert keyboard.Keyboard({"product": "abcd", "transport": ("output", 64)}).power_model is None
+
+
+def test_music_effect_scales_with_level():
+    keys = [{"code": "L", "x": 0, "w": 1}, {"code": "M", "x": 4.5, "w": 1}, {"code": "R", "x": 9, "w": 1}]
+    effect = {"kind": "music", "style": "bars", "quiet": [0, 0, 0], "loud": [9, 9, 9], "sensitivity": 1}
+    assert effects.render(effect, keys, 0, level=0.0)["M"] == [9, 9, 9]
+    assert effects.render(effect, keys, 0, level=0.0)["L"] == [0, 0, 0]
+    assert effects.render(effect, keys, 0, level=1.0)["L"] == [9, 9, 9]
+    pulse = {**effect, "style": "pulse"}
+    assert effects.render(pulse, keys, 0, level=0.5)["L"] == [4.5, 4.5, 4.5]

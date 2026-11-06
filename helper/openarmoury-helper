@@ -10,7 +10,9 @@ import json
 import os
 import re
 import stat
+import struct
 import sys
+import time
 
 MAX_LINE = 8192
 MAX_REPORT = 1024
@@ -18,6 +20,15 @@ ASUS_VENDOR = "00000B05"
 HANDSHAKE = b"ASUS Tech.Inc.\x00"
 REPORT_IDS = (0x5A, 0x5D)
 FAN_CURVE_HWMON = "asus_custom_fan_curve"
+MAX_KEY_EVENTS = 512
+MAX_KEY_DELAY_MS = 5000
+MAX_KEYCODE = 248  # the keyboard range; buttons and firmware keys sit above it
+EV_SYN, EV_KEY = 0, 1
+UI_SET_EVBIT = 0x40045564
+UI_SET_KEYBIT = 0x40045565
+UI_DEV_SETUP = 0x405C5503
+UI_DEV_CREATE = 0x5501
+UI_DEV_DESTROY = 0x5502
 
 NB_WMI_ATTRS = {
     "boot_sound": r"[01]",
@@ -157,6 +168,10 @@ def check_packet(data):
     elif opcode == 0xBA:
         if body[1:3] != b"\xc5\xc4" or body[3] > 3 or any(body[4:]):
             raise Refused("bad brightness packet")
+    elif opcode == 0xBD:
+        # Power states: a fixed sub-command and four bytes of flags, nothing after them.
+        if data[0] != 0x5D or body[1] != 0x01 or any(body[6:]):
+            raise Refused("bad power state packet")
     elif opcode not in (0xB3, 0xB4, 0xB5, 0xBC) or data[0] != 0x5D:
         raise Refused("opcode not allowed")
 
@@ -216,6 +231,61 @@ def do_get_feature(node, report_id, length):
         os.close(fd)
 
 
+def check_key_events(events):
+    """Macro playback: keyboard keys only, bounded in length and time."""
+    if not isinstance(events, list) or not 1 <= len(events) <= MAX_KEY_EVENTS:
+        raise Refused("bad macro length")
+    total = 0
+    for event in events:
+        if not (isinstance(event, list) and len(event) == 3 and all(type(v) is int for v in event)):
+            raise Refused("bad macro event")
+        code, value, delay = event
+        if not 1 <= code <= MAX_KEYCODE or value not in (0, 1) or not 0 <= delay <= MAX_KEY_DELAY_MS:
+            raise Refused("bad macro event")
+        total += delay
+    if total > 60000:
+        raise Refused("macro too long")
+
+
+def do_keys(events):
+    check_key_events(events)
+    if test_root():
+        with open(real("/dev/uinput"), "a", encoding="ascii") as f:
+            f.write(json.dumps(events) + "\n")
+        return {}
+    fd = open_node("/dev/uinput")
+    created = False
+    held = set()
+
+    def emit(kind, code, value):
+        os.write(fd, struct.pack("@qqHHi", 0, 0, kind, code, value))
+
+    try:
+        fcntl.ioctl(fd, UI_SET_EVBIT, EV_KEY)
+        for code in {event[0] for event in events}:
+            fcntl.ioctl(fd, UI_SET_KEYBIT, code)
+        setup = struct.pack("@HHHH80sI", 3, 0x0B05, 0x7E57, 1, b"OpenArmoury macro", 0)
+        fcntl.ioctl(fd, UI_DEV_SETUP, setup)
+        fcntl.ioctl(fd, UI_DEV_CREATE)
+        created = True
+        time.sleep(0.2)  # let the desktop notice the new device
+        for code, value, delay in events:
+            time.sleep(delay / 1000)
+            emit(EV_KEY, code, value)
+            emit(EV_SYN, 0, 0)
+            (held.add if value else held.discard)(code)
+    finally:
+        if created:
+            # Never leave a key stuck down, even if something failed part way.
+            for code in held:
+                emit(EV_KEY, code, 0)
+            emit(EV_SYN, 0, 0)
+            time.sleep(0.05)
+            fcntl.ioctl(fd, UI_DEV_DESTROY)
+        os.close(fd)
+    return {}
+
+
 def handle(request):
     if not isinstance(request, dict):
         raise Refused("bad request")
@@ -228,6 +298,8 @@ def handle(request):
         return do_hid(request.get("node"), request.get("kind"), request.get("data"))
     if op == "get_feature":
         return do_get_feature(request.get("node"), request.get("report_id"), request.get("length"))
+    if op == "keys":
+        return do_keys(request.get("events"))
     raise Refused("unknown op")
 
 

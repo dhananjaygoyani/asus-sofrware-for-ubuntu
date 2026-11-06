@@ -29,7 +29,10 @@ BUILTIN_PRESETS = {
         "spread": 0.0,
         "keys": [[0.0, [30, 30, 30]], [0.5, [255, 255, 255]], [1.0, [30, 30, 30]]],
     },
-    "Temperature": {"kind": "smart", "low": 45, "high": 90, "cold": [0, 120, 255], "hot": [255, 30, 0]},
+    "Temperature": {"kind": "smart", "source": "cpu_temp", "low": 45, "high": 90, "cold": [0, 120, 255], "hot": [255, 30, 0]},
+    "CPU Load": {"kind": "smart", "source": "cpu_load", "low": 5, "high": 90, "cold": [0, 255, 120], "hot": [255, 0, 80]},
+    "Music": {"kind": "music", "style": "bars", "quiet": [20, 0, 80], "loud": [255, 40, 120], "sensitivity": 1.5},
+    "Battery": {"kind": "smart", "source": "battery", "low": 15, "high": 90, "cold": [255, 30, 0], "hot": [0, 230, 80]},
 }
 
 
@@ -56,9 +59,24 @@ def temperature_colour(effect, temperature):
     return lerp(effect["cold"], effect["hot"], amount)
 
 
-def render(effect, keys, t, temperature=None):
-    """Colours for every key at time t. keys are layout entries with code, x, w."""
+def render(effect, keys, t, temperature=None, level=0.0):
+    """Colours for every key at time t. keys are layout entries with code, x, w.
+
+    temperature is whichever sensor the effect follows, and level is the sound level from 0 to 1.
+    """
     kind = effect.get("kind")
+    if kind == "music":
+        amount = min(1.0, (level or 0) * effect.get("sensitivity", 1.0))
+        extent = max((k["x"] + k["w"] for k in keys), default=1) or 1
+        frame = {}
+        for key in keys:
+            if effect.get("style") == "pulse":
+                frame[key["code"]] = lerp(effect["quiet"], effect["loud"], amount)
+            else:
+                # Bars grow from the middle of the keyboard outwards.
+                distance = abs((key["x"] + key["w"] / 2) / extent - 0.5) * 2
+                frame[key["code"]] = effect["loud"] if distance <= amount else effect["quiet"]
+        return frame
     if kind == "paint":
         colours = effect.get("colours", {})
         base = effect.get("base", [0, 0, 0])

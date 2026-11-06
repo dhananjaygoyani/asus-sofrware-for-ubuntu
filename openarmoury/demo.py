@@ -39,6 +39,8 @@ CURVE_GPU = [(58, 2), (60, 38), (63, 63), (66, 71), (69, 114), (74, 150), (79, 1
 def _write(root, relative, value, mode=0o644):
     path = pathlib.Path(root + relative)
     path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists():
+        os.chmod(path, 0o644)  # mock files may be read-only, as on the real laptop
     if isinstance(value, bytes):
         path.write_bytes(value)
     else:
@@ -113,6 +115,30 @@ def build(root):
     _write(root, f"{battery}/status", "Charging", 0o444)
     _write(root, f"{battery}/charge_control_end_threshold", 100)
     _write(root, "/sys/class/power_supply/ADP0/online", 1, 0o444)
+    _write(root, "/sys/class/power_supply/ADP0/type", "Mains", 0o444)
+    _write(root, f"{battery}/type", "Battery", 0o444)
+    _write(root, f"{battery}/energy_full", 79000000, 0o444)
+    _write(root, f"{battery}/energy_full_design", 90000000, 0o444)
+    _write(root, f"{battery}/cycle_count", 212, 0o444)
+    _write(root, f"{battery}/power_now", 19500000, 0o444)
+
+    _write(root, "/proc/stat", "cpu  1000 0 500 8000 200 0 0 0 0 0")
+    _write(root, "/proc/meminfo", "MemTotal: 16000000 kB\nMemAvailable: 9000000 kB")
+    _write(root, "/proc/net/dev", "h1\nh2\n  lo: 5 0 0 0 0 0 0 0 5 0 0 0 0 0 0 0\n eth0: 1000 0 0 0 0 0 0 0 200 0 0 0 0 0 0 0")
+    for pid, name, memory, command in (
+        (101, "firefox", 900000, "/usr/bin/firefox"),
+        (102, "code", 700000, "/usr/share/code/code --type=renderer"),
+        (103, "gnome-shell", 500000, "/usr/bin/gnome-shell"),
+    ):
+        _write(root, f"/proc/{pid}/status", f"Name:\t{name}\nUid:\t{os.getuid()}\t0\t0\t0\nVmRSS:\t{memory} kB")
+        _write(root, f"/proc/{pid}/cmdline", command)
+    _write(root, "/sys/class/hwmon/hwmon3/name", "nvme")
+    _write(root, "/sys/class/hwmon/hwmon3/temp1_input", 41000)
+    _write(root, "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq", 3200000)
+    _write(root, "/sys/bus/pci/devices/0000:01:00.0/class", "0x030000")
+    _write(root, "/sys/bus/pci/devices/0000:01:00.0/vendor", "0x10de")
+    _write(root, "/sys/bus/pci/devices/0000:01:00.0/boot_vga", "0")
+    _write(root, "/sys/bus/pci/devices/0000:01:00.0/power/runtime_status", "suspended")
 
     keyboard = "/sys/class/hidraw/hidraw0/device"
     _write(
@@ -139,3 +165,6 @@ def tick(root, profile=None):
     _write(root, "/sys/class/hwmon/hwmon9/temp1_input", int((cpu - 6) * 1000))
     _write(root, "/sys/class/hwmon/hwmon6/fan1_input", int(max(0, (cpu - 35) * 120)))
     _write(root, "/sys/class/hwmon/hwmon6/fan2_input", int(max(0, (cpu - 32) * 135)))
+    busy = int(t * 40)
+    _write(root, "/proc/stat", f"cpu  {busy} 0 500 {int(t * 60)} 200 0 0 0 0 0")
+    _write(root, "/proc/net/dev", f"h1\nh2\n eth0: {int(t * 90000)} 0 0 0 0 0 0 0 {int(t * 12000)} 0 0 0 0 0 0 0")

@@ -28,6 +28,10 @@ def _rows(widget):
         child = child.get_next_sibling()
 
 
+def page_named(window, title):
+    return next(page for page in window.pages if page.title == title)
+
+
 def capture(window, name):
     paintable = Gtk.WidgetPaintable.new(window)
     width, height = window.get_width(), window.get_height()
@@ -43,22 +47,21 @@ def scenario(app):
     """A generator: each yield lets the UI settle for that many milliseconds."""
     window = app.window
     ctx = app.ctx
-    names = ["dashboard", "performance", "fans", "lighting", "studio", "system"]
-    for index, name in enumerate(names):
-        window.show_page(index)
-        yield 500
-        capture(window, name)
+    for title in ("Dashboard", "Performance", "Fans", "Lighting", "Light Studio", "Scenarios", "Monitor", "Macros", "System"):
+        window.show_page(title)
+        yield 700
+        capture(window, title.lower().replace(" ", "-"))
 
     # Performance: change the profile through the helper, into the mock tree.
-    window.show_page(1)
-    performance = window.pages[1]
+    window.show_page("Performance")
+    performance = page_named(window, "Performance")
     performance.buttons["quiet"].set_active(True)
     yield 400
     assert ctx.hw.profile() == "quiet", "profile write did not reach the mock"
 
     # Fans: drag-equivalent edit, apply, and check monotonic values landed.
-    window.show_page(2)
-    fans = window.pages[2]
+    window.show_page("Fans")
+    fans = page_named(window, "Fans")
     fans.preset_row.set_selected(3)
     yield 200
     fans._apply(True)
@@ -74,8 +77,8 @@ def scenario(app):
     yield 300
 
     # Lighting: ask the mock keyboard, then apply an effect and check packets.
-    window.show_page(3)
-    lighting = window.pages[3]
+    window.show_page("Lighting")
+    lighting = page_named(window, "Lighting")
     ctx.detect_keyboard()
     yield 500
     assert ctx.board.verified_by_keyboard, "handshake failed"
@@ -88,8 +91,8 @@ def scenario(app):
     capture(window, "lighting-detected")
 
     # Studio: run live for a second and check the packets and rate.
-    window.show_page(4)
-    studio = window.pages[4]
+    window.show_page("Light Studio")
+    studio = page_named(window, "Light Studio")
     before = len(pathlib.Path(ctx.demo_root + "/dev/hidraw0").read_text().splitlines())
     studio.live_row.set_active(True)
     yield 2000
@@ -110,11 +113,62 @@ def scenario(app):
     studio._paint_key(ctx.board.light_keys()[10])
     yield 200
 
+    # Power states go through the helper and the mock keyboard.
+    window.show_page("Lighting")
+    lighting._apply_power(None)
+    yield 400
+    assert any(" 5dbd01" in line for line in pathlib.Path(ctx.demo_root + "/dev/hidraw0").read_text().splitlines()), "power state not sent"
+
+    # Music: the audio level drives the effect, and the fake meter is used in demo mode.
+    window.show_page("Light Studio")
+    studio.stack.set_visible_child_name("music")
+    yield 400
+    capture(window, "studio-music")
+    assert studio.effect["kind"] == "music"
+    studio.stack.set_visible_child_name("smart")
+    yield 200
+
+    # Scenarios: a running program switches the profile, and ending it puts your setting back.
+    window.show_page("Scenarios")
+    ctx.hw.profile()
+    original = ctx.hw.profile()
+    target = "performance" if original != "performance" else "quiet"
+    ctx.config["scenarios"] = [{"name": "Browser", "match": "firefox", "enabled": True, "profile": target, "touchpad": False}]
+    page_named(window, "Scenarios")._rebuild()
+    window.automation.tick()
+    yield 400
+    assert ctx.hw.profile() == target, "scenario did not switch profile"
+    assert ctx.desktop.touchpad() is False, "scenario did not turn the touchpad off"
+    capture(window, "scenarios-active")
+    ctx.config["scenarios"] = [{"name": "Browser", "match": "firefox", "enabled": False, "profile": target}]
+    window.automation.tick()
+    yield 400
+    assert ctx.hw.profile() == original and ctx.desktop.touchpad() is True, "settings not restored"
+    ctx.config["scenarios"] = []
+    page_named(window, "Scenarios")._rebuild()
+
+    # Macros: playback goes through the helper, and the helper logs it in demo mode.
+    window.show_page("Macros")
+    ctx.config["macros"] = {"Hello": [[35, 1, 0], [35, 0, 40]]}
+    macros = page_named(window, "Macros")
+    macros._rebuild()
+    macros._play(ctx.config["macros"]["Hello"])
+    yield 400
+    assert "[35, 1, 0]" in pathlib.Path(ctx.demo_root + "/dev/uinput").read_text(), "macro not played"
+    capture(window, "macros-saved")
+
+    # The monitor has real history after a few samples.
+    window.show_page("Monitor")
+    for _ in range(3):
+        window._slow()
+        yield 150
+    capture(window, "monitor-live")
+
     # The gate. Demo mode skips it, so switch that off and check Cancel and Write really behave.
     Context = type(ctx)
     Context.is_demo = property(lambda _self: False)
     ctx.config["approved"] = []
-    window.show_page(5)
+    window.show_page("System")
     limit = "/sys/class/power_supply/BAT0/charge_control_end_threshold"
     results = []
     ctx.submit([ctx.write_op("charge-limit", limit, 70)], results.append)
@@ -152,9 +206,9 @@ def scenario(app):
     assert ctx.hw.battery()["limit"] == 75
 
     # Cancelling a switch puts it back, so it can't claim a change that didn't happen.
-    window.show_page(1)
+    window.show_page("Performance")
     yield 200
-    switch = next(r for r in _rows(window.pages[1].widget) if isinstance(r, Adw.SwitchRow))
+    switch = next(r for r in _rows(page_named(window, "Performance").widget) if isinstance(r, Adw.SwitchRow))
     switch.set_active(True)
     yield 400
     dialog = window.get_visible_dialog()
@@ -164,7 +218,7 @@ def scenario(app):
     yield 400
     assert not switch.get_active(), "switch stayed on after cancel"
     assert ctx.hw.read(GPU_ATTRIBUTE) == "0", "cancel still wrote"
-    window.show_page(5)
+    window.show_page("System")
 
     # Uncertain operations name their reason before anything is sent.
     ctx.submit([ctx.hid_op("save", bytes.fromhex("5db4").ljust(64, b"\x00"), ctx.board.uncertain_reason("save"))], results.append)
@@ -178,7 +232,7 @@ def scenario(app):
     Context.is_demo = property(lambda self: self.demo_root is not None)
 
     # Narrow window: the sidebar should collapse rather than overflow.
-    window.set_default_size(440, 700)
+    window.set_default_size(530, 700)
     yield 500
     capture(window, "narrow")
 

@@ -1,9 +1,10 @@
 """Dashboard, Performance, Fans and System pages."""
+import json
 import os
 import pathlib
 import shutil
 
-from gi.repository import Adw, Gtk
+from gi.repository import Adw, GLib, Gtk
 
 from .. import effects
 from .widgets import CurveView, attribute_row, stat_tile
@@ -31,6 +32,7 @@ FAN_PRESETS = {
     "Quiet": [[45, 0], [55, 20], [62, 40], [68, 70], [74, 105], [80, 150], [86, 200], [95, 255]],
     "Balanced": [[40, 15], [50, 35], [58, 60], [65, 90], [72, 130], [78, 170], [85, 215], [92, 255]],
     "Cool": [[35, 40], [45, 70], [52, 100], [60, 135], [68, 175], [75, 210], [82, 240], [90, 255]],
+    "Full speed": [[30, 255], [40, 255], [50, 255], [60, 255], [70, 255], [80, 255], [90, 255], [100, 255]],
 }
 
 
@@ -63,7 +65,7 @@ class DashboardPage(Page):
         )
         grid = Gtk.FlowBox(selection_mode=Gtk.SelectionMode.NONE, column_spacing=12, row_spacing=12, homogeneous=True, min_children_per_line=2, max_children_per_line=4)
         self.tiles = {}
-        for key, title in (("cpu", "CPU temperature"), ("igpu", "Integrated GPU"), ("profile", "Performance profile"), ("battery", "Battery")):
+        for key, title in (("cpu", "CPU temperature"), ("igpu", "Integrated GPU"), ("dgpu", "Discrete GPU"), ("profile", "Performance profile"), ("battery", "Battery")):
             box, value, detail = stat_tile(title)
             grid.append(box)
             self.tiles[key] = (value, detail)
@@ -91,7 +93,10 @@ class DashboardPage(Page):
         self.tiles["cpu"][0].set_label(f"{cpu:.0f} °C" if cpu is not None else "–")
         igpu = hw.igpu_temp()
         self.tiles["igpu"][0].set_label(f"{igpu:.0f} °C" if igpu is not None else "–")
-        self.tiles["igpu"][1].set_label("The discrete GPU isn't read, to avoid waking it")
+        gpu = self.ctx.monitor.discrete_gpu()
+        states = {"suspended": "Asleep", "active": "Awake"}
+        self.tiles["dgpu"][0].set_label(states.get(gpu["state"], gpu["state"].title()) if gpu else "None")
+        self.tiles["dgpu"][1].set_label(f"{gpu['vendor']}. Temperature isn't read, to avoid waking it" if gpu else "")
         profile = hw.profile()
         self.tiles["profile"][0].set_label(PROFILE_LABELS.get(profile, profile or "–"))
         battery = hw.battery()
@@ -330,9 +335,69 @@ class SystemPage(Page):
             button.connect("clicked", self._apply_limit, battery["limit_path"])
             self.limit_row.add_suffix(button)
             charging.add(self.limit_row)
+            presets = Gtk.Box(css_classes=["linked"], valign=Gtk.Align.CENTER)
+            for value, label in ((100, "Full"), (80, "Balanced"), (60, "Longest life")):
+                preset = Gtk.Button(label=label, tooltip_text=f"Charge to {value}%")
+                preset.connect("clicked", self._limit_preset, value, battery["limit_path"])
+                presets.append(preset)
+            row = Adw.ActionRow(title="Battery care", subtitle="Full for travel, lower limits for a laptop mostly on AC.")
+            row.add_suffix(presets)
+            charging.add(row)
+            full = Adw.ActionRow(title="Charge to 100% once", subtitle="Goes back to your limit when full. Needs the app running until then.")
+            full_button = Gtk.Button(label="Start", valign=Gtk.Align.CENTER)
+            full_button.connect("clicked", self._full_charge, battery["limit_path"])
+            full.add_suffix(full_button)
+            charging.add(full)
         else:
             charging.add(Adw.ActionRow(title="Charge limit isn't available on this laptop"))
+        health = ctx.hw.battery_health()
+        if health:
+            capacity = f"{health['percent']:.0f}% of its original capacity" if health["percent"] else "Capacity not reported"
+            cycles = f"{health['cycles']} charge cycles" if health["cycles"] else "Cycles not reported"
+            charging.add(Adw.ActionRow(title="Battery health", subtitle=f"{capacity}. {cycles}."))
         page.add(charging)
+
+        desktop = ctx.desktop
+        controls = Adw.PreferencesGroup(title="Keyboard and touchpad")
+        if desktop.touchpad() is not None:
+            row = Adw.SwitchRow(title="Touchpad", active=desktop.touchpad())
+            row.connect("notify::active", lambda r, _p: desktop.set_touchpad(r.get_active()))
+            controls.add(row)
+        if desktop.win_key() is not None:
+            row = Adw.SwitchRow(title="Win key opens Activities", subtitle="Turn off so it can't pull you out of a game. Shortcuts such as Win+L still work.", active=desktop.win_key())
+            row.connect("notify::active", lambda r, _p: desktop.set_win_key(r.get_active()))
+            controls.add(row)
+        if desktop.mic_muted() is not None:
+            row = Adw.SwitchRow(title="Microphone muted", active=desktop.mic_muted())
+            row.connect("notify::active", lambda r, _p: desktop.set_mic_muted(r.get_active()))
+            controls.add(row)
+        row = Adw.SwitchRow(title="ROG key opens OpenArmoury", subtitle="Adds a desktop shortcut for the key. Fn+F5 changes the fan profile through the kernel, where the laptop supports it.", active=bool(desktop.shortcut("rog-key")))
+        row.connect("notify::active", lambda r, _p: desktop.set_shortcut("rog-key", "OpenArmoury", "XF86Launch3" if r.get_active() else "", "openarmoury"))
+        controls.add(row)
+        page.add(controls)
+
+        self.rates = desktop.refresh_rates()
+        display = Adw.PreferencesGroup(title="Display")
+        if self.rates and len(self.rates["modes"]) > 1:
+            labels = [f"{rate:.0f} Hz" for rate, _id in self.rates["modes"]]
+            self.rate_row = Adw.ComboRow(title="Refresh rate", subtitle="Lower rates save battery. This is reset on restart.", model=Gtk.StringList.new(labels))
+            rates = [rate for rate, _id in self.rates["modes"]]
+            self.rate_row.set_selected(rates.index(self.rates["current"]) if self.rates["current"] in rates else 0)
+            self.rate_row.connect("notify::selected", self._rate_changed)
+            display.add(self.rate_row)
+        night = desktop.night_light()
+        if night:
+            enabled, temperature = night
+            row = Adw.SwitchRow(title="Night light", subtitle="Warmer colours that are easier on your eyes.", active=enabled)
+            row.connect("notify::active", lambda r, _p: desktop.set_night_light(r.get_active()))
+            display.add(row)
+            warm = Adw.SpinRow.new_with_range(1700, 4700, 100)
+            warm.set_title("Night light warmth")
+            warm.set_subtitle("Kelvin. Lower is warmer.")
+            warm.set_value(temperature)
+            warm.connect("notify::value", lambda r, _p: desktop.set_night_light(desktop.night_light()[0], r.get_value()))
+            display.add(warm)
+        page.add(display)
 
         other = [a for a in ctx.hw.armoury_attributes() if a["name"] not in GPU_ATTRIBUTES and not a["name"].startswith(POWER_PREFIXES)]
         if other:
@@ -349,7 +414,30 @@ class SystemPage(Page):
         )
         self.restore_row.connect("notify::active", self._restore_changed)
         startup.add(self.restore_row)
+        self.background_row = Adw.SwitchRow(
+            title="Keep running after closing the window",
+            subtitle="Lets scenarios, battery rules and live lighting carry on, and starts at login if restore is on.",
+            active=ctx.config["run_in_background"],
+        )
+        self.background_row.connect("notify::active", self._background_changed)
+        startup.add(self.background_row)
+        quit_row = Adw.ActionRow(title="Quit OpenArmoury", subtitle="Stops everything, including background rules.")
+        quit_button = Gtk.Button(label="Quit", valign=Gtk.Align.CENTER)
+        quit_button.connect("clicked", lambda _b: ctx.window.quit_app())
+        quit_row.add_suffix(quit_button)
+        startup.add(quit_row)
         page.add(startup)
+
+        backup = Adw.PreferencesGroup(title="Backup", description="Saves your scenarios, macros, presets, curves and rules to a file. Approvals aren't included, so restoring still asks before new kinds of change.")
+        row = Adw.ActionRow(title="Settings file")
+        export_button = Gtk.Button(label="Save copy", valign=Gtk.Align.CENTER)
+        export_button.connect("clicked", self._export)
+        import_button = Gtk.Button(label="Restore", valign=Gtk.Align.CENTER)
+        import_button.connect("clicked", self._import)
+        row.add_suffix(import_button)
+        row.add_suffix(export_button)
+        backup.add(row)
+        page.add(backup)
 
         about = Adw.PreferencesGroup(title="About")
         identity = ctx.hw.identity()
@@ -377,12 +465,71 @@ class SystemPage(Page):
 
         self.ctx.submit([self.ctx.write_op("charge-limit", path, value)], done)
 
+    def _limit_preset(self, _button, value, path):
+        self.limit_row.set_value(value)
+        self._apply_limit(None, path)
+
+    def _full_charge(self, _button, path):
+        battery = self.ctx.hw.battery()
+        previous = battery["limit"] if battery else None
+
+        def done(ok):
+            if ok and previous and previous < 100:
+                self.ctx.config["full_charge_return"] = previous
+                self.ctx.toast("Charging to 100%. Your limit comes back when it's full.")
+
+        self.ctx.submit([self.ctx.write_op("charge-limit", path, 100)], done)
+
+    def _rate_changed(self, row, _p):
+        _rate, mode_id = self.rates["modes"][row.get_selected()]
+        try:
+            self.ctx.desktop.set_refresh(mode_id)
+        except GLib.Error as err:
+            self.ctx.toast(f"Couldn't change the refresh rate: {err.message}")
+
     def _restore_changed(self, row, _p):
         self.ctx.config["restore_at_login"] = row.get_active()
-        set_autostart(row.get_active(), self.ctx.is_demo)
+        set_autostart(row.get_active(), self.ctx.is_demo, self.ctx.config["run_in_background"])
+
+    def _background_changed(self, row, _p):
+        self.ctx.config["run_in_background"] = row.get_active()
+        set_autostart(self.ctx.config["restore_at_login"], self.ctx.is_demo, row.get_active())
+        self.ctx.window.update_background()
+
+    def _export(self, _button):
+        dialog = Gtk.FileDialog(initial_name="openarmoury-settings.json")
+
+        def chosen(source, result):
+            try:
+                target = source.save_finish(result)
+            except GLib.Error:
+                return
+            with open(target.get_path(), "w", encoding="utf-8") as f:
+                json.dump(self.ctx.config.export_data(), f, indent=1)
+            self.ctx.toast("Settings saved.")
+
+        dialog.save(self.ctx.window, None, chosen)
+
+    def _import(self, _button):
+        dialog = Gtk.FileDialog()
+
+        def chosen(source, result):
+            try:
+                target = source.open_finish(result)
+            except GLib.Error:
+                return
+            try:
+                with open(target.get_path(), encoding="utf-8") as f:
+                    count = self.ctx.config.import_data(json.load(f))
+            except (OSError, ValueError) as err:
+                self.ctx.toast(f"Couldn't restore that file: {err}")
+                return
+            self.ctx.toast(f"Restored {count} settings. Reopen the app to see them.")
+
+        dialog.open(self.ctx.window, None, chosen)
 
 
-def set_autostart(enabled, is_demo=False):
+def set_autostart(enabled, is_demo=False, background=False):
     """Add or remove the per-user login entry. A demo session must not change the real login."""
     if is_demo:
         return
@@ -395,5 +542,5 @@ def set_autostart(enabled, is_demo=False):
     base.mkdir(parents=True, exist_ok=True)
     entry.write_text(
         "[Desktop Entry]\nType=Application\nName=OpenArmoury restore\n"
-        f"Exec={command} --restore\nNoDisplay=true\nX-GNOME-Autostart-enabled=true\n"
+        f"Exec={command} {'--background' if background else '--restore'}\nNoDisplay=true\nX-GNOME-Autostart-enabled=true\n"
     )

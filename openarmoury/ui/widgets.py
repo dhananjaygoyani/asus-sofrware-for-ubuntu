@@ -65,6 +65,37 @@ class Canvas(Gtk.Widget):
         snapshot.restore()
 
 
+class Sparkline(Canvas):
+    """A small history chart, from 0 to 100."""
+
+    def __init__(self):
+        super().__init__(48, margin_top=6)
+        self.values = []
+        self.update_property([Gtk.AccessibleProperty.LABEL], ["Recent history"])
+
+    def set_values(self, values):
+        self.values = values
+        self.queue_draw()
+
+    def do_snapshot(self, snapshot):
+        if len(self.values) < 2:
+            return
+        width, height = self.get_width(), self.get_height()
+        step = width / (len(self.values) - 1)
+        y = lambda v: height - max(0, min(100, v)) / 100 * (height - 2) - 1  # noqa: E731
+        area = Gsk.PathBuilder.new()
+        area.move_to(0, height)
+        for index, value in enumerate(self.values):
+            area.line_to(index * step, y(value))
+        area.line_to(width, height)
+        area.close()
+        snapshot.append_fill(area.to_path(), Gsk.FillRule.WINDING, _colour(0.21, 0.52, 0.89, 0.25))
+        line = Gsk.PathBuilder.new()
+        for index, value in enumerate(self.values):
+            (line.line_to if index else line.move_to)(index * step, y(value))
+        snapshot.append_stroke(line.to_path(), Gsk.Stroke.new(2), _colour(0.21, 0.52, 0.89))
+
+
 class KeyboardView(Canvas):
     """Draws the layout lit by a frame of colours. Keys can be clicked or dragged over to paint."""
 

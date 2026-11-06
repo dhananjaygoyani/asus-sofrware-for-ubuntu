@@ -142,6 +142,16 @@ class Keyboard:
         backlight = self.capabilities["backlight_type"] if self.capabilities else 2
         return [packets.direct_zones(colours, backlight, length)]
 
+    @property
+    def power_model(self):
+        """Which power-state layout this keyboard takes, from asusctl's list. None if unknown."""
+        product = self.interface["product"] if self.interface else ""
+        if product in ("1866", "18c6", "1869", "1854"):
+            return "legacy"
+        if product in ("19b6", "1a30", "1ce6"):
+            return "current"
+        return None
+
     def direct_init_byte(self):
         """Byte 2 of the packet that starts direct colour: 0 for per-key, otherwise the zone form."""
         if self.kind == "per-key":
@@ -152,6 +162,12 @@ class Keyboard:
         """Why an operation needs your explicit approval, or None. Mirrors the labels in docs/protocol.md."""
         if operation == "save":
             return "Which packet saves to keyboard flash isn't proven. This one may wear or change saved settings."
+        if operation == "power-state":
+            if self.power_model == "legacy":
+                return "The layout for this older keyboard comes from asusctl only. A wrong value could change when lights come on."
+            return "The bit layout matches vendor code, but the packet that sends it comes from asusctl."
+        if operation == "macro":
+            return None
         if operation == "zone-effect":
             return "Zone numbers for built-in effects come from asusctl only."
         if operation == "direct" and self.kind == "zone":

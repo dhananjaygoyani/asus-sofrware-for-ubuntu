@@ -15,7 +15,15 @@ DEFAULTS = {
     "presets": {},
     "capabilities": None,  # the keyboard's handshake reply
     "approved": [],  # uncertain operations you have accepted
+    "run_in_background": False,
+    "power_rules": {"ac": {}, "battery": {}},
+    "scenarios": [],
+    "macros": {},
+    "power_states": None,
+    "full_charge_return": None,  # the limit to go back to after a one-time full charge
 }
+# A backup file must never be able to approve changes on your behalf.
+NOT_BACKED_UP = ("approved", "capabilities")
 
 
 def config_dir():
@@ -46,6 +54,20 @@ class Config:
     def __setitem__(self, key, value):
         self.data[key] = value
         self.save()
+
+    def export_data(self):
+        return {key: value for key, value in self.data.items() if key not in NOT_BACKED_UP}
+
+    def import_data(self, loaded):
+        """Bring in settings from a backup. Returns how many were recognised."""
+        if not isinstance(loaded, dict):
+            raise ValueError("Not a settings file")
+        known = {key: value for key, value in loaded.items() if key in DEFAULTS and key not in NOT_BACKED_UP}
+        if not known:
+            raise ValueError("No settings found in this file")
+        self.data.update(known)
+        self.save()
+        return len(known)
 
     def save(self):
         self.path.parent.mkdir(parents=True, exist_ok=True)

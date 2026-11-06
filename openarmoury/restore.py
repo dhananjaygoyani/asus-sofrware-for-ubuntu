@@ -1,4 +1,5 @@
 """Re-apply saved settings at login. Only re-applies kinds of change you have already approved in the app."""
+import re
 import sys
 
 from . import packets, system
@@ -40,6 +41,24 @@ def plan(hw, config):
         for commit in packets.commit(save=False, length=length):
             steps.append(("hid", interface["node"], kind, commit))
     return steps
+
+
+def play_macro(slug):
+    """Play a macro by the name its shortcut uses. Used by desktop shortcuts."""
+    config = Config()
+    for name, events in config["macros"].items():
+        if re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")[:32] == slug:
+            helper = Helper()
+            try:
+                helper.request(op="keys", events=events)
+            except (WriteError, OSError) as err:
+                print(f"openarmoury: macro failed: {err}", file=sys.stderr)
+                return 1
+            finally:
+                helper.close()
+            return 0
+    print(f"openarmoury: no macro called {slug}", file=sys.stderr)
+    return 1
 
 
 def run():
