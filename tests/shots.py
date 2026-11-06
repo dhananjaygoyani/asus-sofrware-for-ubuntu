@@ -286,6 +286,50 @@ def scenario(app):
     assert ctx.hw.read(GPU_ATTRIBUTE) == "0", "cancel still wrote"
     window.show_page("System")
 
+    # Battery care: cancelling puts the buttons and the number back on the real limit.
+    window.show_page("System")
+    yield 200
+    system_page = page_named(window, "System")
+    ctx.config["approved"] = []
+    real_limit = ctx.hw.battery()["limit"]
+    pick = 0 if real_limit != system_page.care_values[0] else 1
+    system_page.care_row.set_selected(pick)
+    yield 400
+    dialog = window.get_visible_dialog()
+    assert dialog is not None, "battery care skipped the gate"
+    dialog.close()
+    yield 400
+    assert ctx.hw.battery()["limit"] == real_limit, "cancel still wrote"
+    assert system_page.limit_row.get_value() == real_limit, "number stayed on a cancelled limit"
+    if real_limit in system_page.care_values:
+        assert system_page.care_row.get_selected() == system_page.care_values.index(real_limit), "buttons stayed on a cancelled limit"
+    assert not window.get_visible_dialog(), "putting the buttons back asked again"
+
+    # Live lighting: cancelling an effect keeps it running, and approving stops it and turns the switch off.
+    window.show_page("Light Studio")
+    studio = page_named(window, "Light Studio")
+    ctx.config["approved"] = ["direct"]
+    studio.live_row.set_active(True)
+    yield 400
+    assert ctx.live_effect, "live lighting didn't start"
+    window.show_page("Lighting")
+    lighting = page_named(window, "Lighting")
+    lighting._apply(None)
+    yield 400
+    dialog = window.get_visible_dialog()
+    assert dialog is not None, "effect skipped the gate"
+    dialog.close()
+    yield 300
+    assert ctx.live_effect and studio.live_row.get_active(), "cancel stopped live lighting"
+    lighting._apply(None)
+    yield 300
+    dialog = window.get_visible_dialog()
+    dialog.emit("response", "write")
+    dialog.force_close()
+    yield 400
+    assert not ctx.live_effect and not studio.live_row.get_active(), "switch still on after live lighting stopped"
+    ctx.config["approved"] = []
+
     # Uncertain operations name their reason before anything is sent.
     ctx.submit([ctx.hid_op("save", bytes.fromhex("5db4").ljust(64, b"\x00"), ctx.board.uncertain_reason("save"))], results.append)
     yield 400

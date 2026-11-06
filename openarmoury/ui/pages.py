@@ -158,7 +158,7 @@ class HomePage(Page):
         if profile in self.mode_buttons:
             self.mode_buttons[profile].set_active(True)
         self.updating = False
-        self.gauges["cpu"].set_value(hw.cpu_temp())
+        self.gauges["cpu"].set_value(meter.temperature_smooth if meter.temperature_smooth is not None else hw.cpu_temp())
         self.gauges["load"].set_value(meter.cpu_percent)
         used, total = meter.memory()
         self.gauges["memory"].set_value(100 * used / total if total else None)
@@ -393,6 +393,7 @@ class SystemPage(Page):
             self.care_values = [100, 80, 60]
             current = self.care_values.index(battery["limit"]) if battery["limit"] in self.care_values else 0
             self.care_row = design.SegmentedRow("Battery care", ["Full", "Balanced", "Longest life"], current, "Full for travel, lower limits for a laptop mostly on AC.")
+            self.care_updating = False
             self.care_row.connect("notify::selected", self._care_changed, battery["limit_path"])
             charging.add(self.care_row)
             full = Adw.ActionRow(title="Charge to 100% once", subtitle="Goes back to your limit when full. Needs the app running until then.")
@@ -513,12 +514,23 @@ class SystemPage(Page):
             if ok:
                 self.ctx.config["charge_limit"] = value
                 self.ctx.toast(f"Charge limit set to {value}%.")
+            self._sync_limit()
 
         self.ctx.submit([self.ctx.write_op("charge-limit", path, value)], done)
 
     def _care_changed(self, row, _p, path):
-        self.limit_row.set_value(self.care_values[row.get_selected()])
-        self._apply_limit(None, path)
+        if not self.care_updating:
+            self.limit_row.set_value(self.care_values[row.get_selected()])
+            self._apply_limit(None, path)
+
+    def _sync_limit(self):
+        """Show the limit the battery really has, so a cancelled change can't look applied."""
+        limit = self.ctx.hw.battery()["limit"]
+        self.care_updating = True
+        self.limit_row.set_value(limit)
+        if limit in self.care_values:
+            self.care_row.set_selected(self.care_values.index(limit))
+        self.care_updating = False
 
     def _full_charge(self, _button, path):
         battery = self.ctx.hw.battery()

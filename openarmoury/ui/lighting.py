@@ -174,14 +174,13 @@ class LightingPage(Page):
     def _apply(self, _button):
         settings = self._settings()
         ops = effect_ops(self.ctx, settings)
-        self.ctx.stop_live()
 
         def done(ok):
             if ok:
                 self.ctx.config["lighting"] = settings
                 self.ctx.toast("Effect applied.")
 
-        self.ctx.submit(ops, done)
+        self.ctx.submit(ops, done, before=self.ctx.stop_live)
 
     def _brightness_changed(self, row, _p):
         if not getattr(self, "brightness_ready", False):
@@ -266,7 +265,14 @@ class StudioPage(Page):
         self._build_tabs()
         self.stack.connect("notify::visible-child-name", self._tab_changed)
         ctx.board_listeners.append(self.rebuild)
+        ctx.live_listeners.append(self._live_stopped)
         self.rebuild()
+
+    def _live_stopped(self):
+        """Live lighting can stop from elsewhere, so the switch mustn't keep claiming it's on."""
+        self._live_updating = True
+        self.live_row.set_active(False)
+        self._live_updating = False
 
     def rebuild(self):
         board = self.ctx.board

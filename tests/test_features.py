@@ -56,6 +56,12 @@ def test_desktop_processes_are_never_offered_for_closing(hw):
     assert meter.top_processes(os.getuid() + 1) == []
 
 
+def test_temperature_spike_is_smoothed():
+    assert monitor.smoothed(None, 60) == 60
+    assert monitor.smoothed(60, None) is None
+    assert monitor.smoothed(60, 90) == 66  # one brief spike barely moves the display
+
+
 def test_format_rate():
     assert monitor.format_rate(500) == "500 B/s" and monitor.format_rate(2048) == "2 KB/s"
 

@@ -51,6 +51,7 @@ class Context:
         self.board = self._make_board()
         self.board_listeners = []
         self.live_effect = None
+        self.live_listeners = []
         self.frame_busy = False
         self.limiter = effects.RateLimiter()
         self.save_source = None
@@ -125,15 +126,18 @@ class Context:
     def is_approved(self, op):
         return op.key in self.config["approved"]
 
-    def submit(self, ops, done=None, warning=None):
-        """Show exactly what will be written the first time, then run it off the UI thread."""
+    def submit(self, ops, done=None, warning=None, before=None):
+        """Show exactly what will be written the first time, then run it off the UI thread.
+
+        before runs only once the change is really going ahead, not if you cancel.
+        """
         pending = [] if self.is_demo else [op for op in ops if not self.is_approved(op)]
         if not pending and not warning:
-            self._run(ops, done)
+            self._run(ops, done, before)
             return
-        self._confirm(ops, pending, warning, done)
+        self._confirm(ops, pending, warning, done, before)
 
-    def _confirm(self, ops, pending, warning, done):
+    def _confirm(self, ops, pending, warning, done, before):
         dialog = Adw.AlertDialog(heading="Write to your laptop?" if pending else "Are you sure?")
         lines = []
         reasons = sorted({op.uncertain for op in pending if op.uncertain})
@@ -172,7 +176,7 @@ class Context:
                 if op.key not in approved:
                     approved.append(op.key)
             self.config.save()
-            self._run(ops, done)
+            self._run(ops, done, before)
 
         dialog.connect("response", respond)
         dialog.present(self.window)
@@ -190,7 +194,9 @@ class Context:
 
         self.executor.submit(work).add_done_callback(lambda future: GLib.idle_add(finished, future.result()))
 
-    def _run(self, ops, done):
+    def _run(self, ops, done, before=None):
+        if before:
+            before()
         self._send(ops, lambda error: self._finish(error, done))
 
     def _finish(self, error, done):
@@ -221,6 +227,8 @@ class Context:
 
     def stop_live(self):
         self.live_effect = None
+        for listener in self.live_listeners:
+            listener()
 
     def _frame_ops(self, frame, first=False, uncertain=None):
         board = self.board
