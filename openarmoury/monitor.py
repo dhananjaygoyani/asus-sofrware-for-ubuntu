@@ -1,13 +1,39 @@
-"""Live system readings from /proc and /sys. Nothing here can wake the discrete GPU."""
+"""Live system readings from /proc, /sys and nvidia-smi. Nothing here wakes a sleeping discrete GPU."""
 import os
+import shutil
+import subprocess
 import time
 
 NVIDIA = "0x10de"
+GPU_QUERY = "temperature.gpu,utilization.gpu,memory.used,memory.total,clocks.gr,power.draw,name"
+# A query itself keeps the GPU awake for about 21 seconds, so an idle GPU must be asked less often than that.
+GPU_POLL_BUSY = 5
+GPU_POLL_IDLE = 30
+GPU_BUSY_PERCENT = 5
+GPU_MAX_WATTS = 300  # the first reading after waking can be nonsense, such as 752 W
 # Ending these would take the desktop down, so they aren't offered.
 PROTECTED = {
     "gnome-shell", "Xorg", "Xwayland", "systemd", "pipewire", "pipewire-pulse", "wireplumber", "dbus-daemon",
     "gnome-session-binary", "gdm-x-session", "gdm-wayland-session", "openarmoury", "python3", "bash", "sh",
 }
+
+
+def parse_gpu_stats(text):
+    """Turn one line of nvidia-smi output into numbers. Fields it can't report become None."""
+    parts = [part.strip() for part in text.strip().splitlines()[0].split(",")] if text.strip() else []
+    if len(parts) != 7:
+        return None
+
+    def number(value):
+        try:
+            return float(value)
+        except ValueError:
+            return None
+
+    temperature, load, used, total, clock, power = (number(part) for part in parts[:6])
+    if power is not None and not 0 <= power <= GPU_MAX_WATTS:
+        power = None
+    return {"temperature": temperature, "load": load, "memory_used": used, "memory_total": total, "clock": clock, "power": power, "name": parts[6]}
 
 
 def _cpu_times(text):
@@ -28,12 +54,41 @@ class Monitor:
         self.process_cache = []
         self.temperature_cache = None
         self.temperature_smooth = None
+        self.gpu_stats = None
+        self.next_gpu_poll = 0.0
 
     def sample_slow(self):
         """Work too slow for the UI thread. Runs on a background thread, and a list swap is safe in Python."""
         self.process_cache = self.processes()
         self.temperature_cache = self.hw.cpu_temp()
         self.temperature_smooth = smoothed(self.temperature_smooth, self.temperature_cache)
+        self.sample_gpu(time.monotonic())
+
+    def sample_gpu(self, now):
+        """Ask nvidia-smi only if the GPU is already awake, and rarely enough that an idle GPU can fall asleep."""
+        gpu = self.discrete_gpu()
+        if not gpu or gpu["state"] != "active":
+            self.gpu_stats = None
+            return
+        if now < self.next_gpu_poll:
+            return
+        self.gpu_stats = self.query_gpu()
+        busy = self.gpu_stats and (self.gpu_stats["load"] or 0) >= GPU_BUSY_PERCENT
+        self.next_gpu_poll = now + (GPU_POLL_BUSY if busy else GPU_POLL_IDLE)
+
+    def query_gpu(self):
+        if self.hw.root:
+            return parse_gpu_stats(self.hw.read("/mock/nvidia-smi", ""))
+        if not shutil.which("nvidia-smi"):
+            return None
+        try:
+            result = subprocess.run(
+                ["nvidia-smi", f"--query-gpu={GPU_QUERY}", "--format=csv,noheader,nounits"],
+                capture_output=True, text=True, timeout=5, check=False,
+            )
+        except (OSError, subprocess.SubprocessError):
+            return None
+        return parse_gpu_stats(result.stdout) if result.returncode == 0 else None
 
     def sample(self, now=None):
         """Update the rates. Call at a steady interval."""

@@ -79,6 +79,8 @@ class Context:
             return self.monitor.cpu_percent
         if source == "igpu_temp":
             return self.hw.igpu_temp()
+        if source == "dgpu_temp":
+            return (self.monitor.gpu_stats or {}).get("temperature")
         if source == "battery":
             battery = self.hw.battery()
             return battery["capacity"] if battery else None

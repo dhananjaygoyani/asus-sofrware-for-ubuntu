@@ -44,6 +44,11 @@ class MonitorPage(Page):
         self.rows = {}
         for key, title in (
             ("gpu", "Discrete GPU"),
+            ("gpu_temp", "GPU temperature"),
+            ("gpu_load", "GPU load"),
+            ("gpu_memory", "GPU memory"),
+            ("gpu_clock", "GPU clock"),
+            ("gpu_power", "GPU power"),
             ("disk", "Disk temperature"),
             ("down", "Network download"),
             ("up", "Network upload"),
@@ -77,6 +82,13 @@ class MonitorPage(Page):
         gpu = meter.discrete_gpu()
         states = {"suspended": "Asleep, saving power", "active": "Awake"}
         self.rows["gpu"].set_label(f"{gpu['vendor']}: {states.get(gpu['state'], gpu['state'])}" if gpu else "None found")
+        stats = meter.gpu_stats or {}
+        reading = lambda key, form: form.format(stats[key]) if stats.get(key) is not None else "–"  # noqa: E731
+        self.rows["gpu_temp"].set_label(reading("temperature", "{:.0f} °C"))
+        self.rows["gpu_load"].set_label(reading("load", "{:.0f}%"))
+        self.rows["gpu_memory"].set_label(f"{stats['memory_used'] / 1024:.1f} of {stats['memory_total'] / 1024:.1f} GB" if stats.get("memory_used") is not None and stats.get("memory_total") else "–")
+        self.rows["gpu_clock"].set_label(reading("clock", "{:.0f} MHz"))
+        self.rows["gpu_power"].set_label(reading("power", "{:.0f} W"))
         temperature = meter.disk_temp()
         self.rows["disk"].set_label(f"{temperature:.0f} °C" if temperature is not None else "–")
         self.rows["down"].set_label(monitor.format_rate(meter.net_down))

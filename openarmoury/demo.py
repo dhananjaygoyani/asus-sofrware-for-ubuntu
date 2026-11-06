@@ -138,7 +138,8 @@ def build(root):
     _write(root, "/sys/bus/pci/devices/0000:01:00.0/class", "0x030000")
     _write(root, "/sys/bus/pci/devices/0000:01:00.0/vendor", "0x10de")
     _write(root, "/sys/bus/pci/devices/0000:01:00.0/boot_vga", "0")
-    _write(root, "/sys/bus/pci/devices/0000:01:00.0/power/runtime_status", "suspended")
+    _write(root, "/sys/bus/pci/devices/0000:01:00.0/power/runtime_status", "active")
+    _write(root, "/mock/nvidia-smi", "58, 34, 1200, 4096, 1500, 42.5, Demo GPU")
 
     keyboard = "/sys/class/hidraw/hidraw0/device"
     _write(

@@ -457,7 +457,7 @@ class StudioPage(Page):
         self.smart = copy.deepcopy(self.effect if self.effect.get("kind") == "smart" else effects.BUILTIN_PRESETS["Temperature"])
         page = Adw.PreferencesPage()
         group = Adw.PreferencesGroup(title="Colour follows a sensor")
-        self.sources = [("cpu_temp", "CPU temperature"), ("cpu_load", "CPU load"), ("igpu_temp", "Integrated GPU temperature"), ("battery", "Battery level")]
+        self.sources = [("cpu_temp", "CPU temperature"), ("cpu_load", "CPU load"), ("igpu_temp", "Integrated GPU temperature"), ("dgpu_temp", "Discrete GPU temperature"), ("battery", "Battery level")]
         source_row = _combo("Follow", [label for _k, label in self.sources], [k for k, _l in self.sources].index(self.smart.get("source", "cpu_temp")))
         source_row.connect("notify::selected", self._source_changed)
         group.add(source_row)

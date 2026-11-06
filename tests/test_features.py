@@ -39,7 +39,60 @@ def test_memory_and_sensors(hw):
 
 
 def test_discrete_gpu_state_is_read_without_config_space(hw):
-    assert monitor.Monitor(hw).discrete_gpu() == {"vendor": "NVIDIA", "state": "suspended"}
+    assert monitor.Monitor(hw).discrete_gpu() == {"vendor": "NVIDIA", "state": "active"}
+
+
+GPU_PATH = "/sys/bus/pci/devices/0000:01:00.0/power/runtime_status"
+
+
+def counting_monitor(hw):
+    meter = monitor.Monitor(hw)
+    meter.calls = 0
+    real = meter.query_gpu
+
+    def counted():
+        meter.calls += 1
+        return real()
+
+    meter.query_gpu = counted
+    return meter
+
+
+def test_sleeping_gpu_is_never_queried(hw):
+    demo._write(hw.root, GPU_PATH, "suspended")
+    meter = counting_monitor(hw)
+    meter.gpu_stats = {"stale": True}
+    meter.sample_gpu(100.0)
+    assert meter.calls == 0 and meter.gpu_stats is None
+
+
+def test_idle_gpu_is_asked_rarely_enough_to_fall_asleep(hw):
+    demo._write(hw.root, "/mock/nvidia-smi", "40, 0, 15, 4096, 300, 15, Demo")
+    meter = counting_monitor(hw)
+    for second in range(0, 29):
+        meter.sample_gpu(float(second))
+    assert meter.calls == 1  # it takes 21 seconds to sleep, so this gap must stay above that
+    assert monitor.GPU_POLL_IDLE > 21
+    meter.sample_gpu(30.0)
+    assert meter.calls == 2
+
+
+def test_busy_gpu_updates_quickly(hw):
+    demo._write(hw.root, "/mock/nvidia-smi", "70, 80, 3000, 4096, 1500, 60, Demo")
+    meter = counting_monitor(hw)
+    meter.sample_gpu(0.0)
+    meter.sample_gpu(4.0)
+    assert meter.calls == 1
+    meter.sample_gpu(5.0)
+    assert meter.calls == 2
+
+
+def test_gpu_output_parsing():
+    stats = monitor.parse_gpu_stats("43, 8, 15, 4096, 1500, 15.52, NVIDIA GeForce RTX 3050 Laptop GPU\n")
+    assert stats["temperature"] == 43 and stats["power"] == 15.52 and stats["name"].endswith("Laptop GPU")
+    assert monitor.parse_gpu_stats("43, 8, 15, 4096, 1500, 752.67, X")["power"] is None
+    assert monitor.parse_gpu_stats("43, [N/A], 15, 4096, [Not Supported], [N/A], X")["load"] is None
+    assert monitor.parse_gpu_stats("") is None and monitor.parse_gpu_stats("garbage") is None
 
 
 def test_integrated_gpu_is_not_reported_as_discrete(tmp_path):

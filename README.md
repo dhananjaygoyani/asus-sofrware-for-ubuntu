@@ -55,7 +55,7 @@ instead, and asks for your password once a session.
   to hidraw devices with the ASUS vendor ID. Firmware-style commands are refused.
 - **Nothing is saved to the keyboard unless you ask.** Animations send only non-persistent colour packets, at no
   more than 15 frames a second.
-- **The discrete GPU is left alone.** `nvidia-smi` is never called and its sensors are never read, so it isn't woken.
+- **A sleeping GPU stays asleep.** `nvidia-smi` is only asked when the GPU is already awake, and rarely enough when idle that it can go back to sleep.
 
 ## Verified vs untested
 

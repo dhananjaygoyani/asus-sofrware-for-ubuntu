@@ -341,6 +341,15 @@ def scenario(app):
     assert not any(" 5db4" in line for line in pathlib.Path(ctx.demo_root + "/dev/hidraw0").read_text().splitlines())
     Context.is_demo = property(lambda self: self.demo_root is not None)
 
+    # The discrete GPU's readings reach the Home dial, the Monitor rows and the lighting sensor.
+    ctx.monitor.sample_slow()
+    assert ctx.monitor.gpu_stats and ctx.monitor.gpu_stats["temperature"] == 58, "GPU readings missing"
+    window.show_page("Monitor")
+    yield 300
+    assert page_named(window, "Monitor").rows["gpu_temp"].get_label() == "58 °C", "Monitor has no GPU temperature"
+    assert ctx.effect_input({"source": "dgpu_temp"}) == 58, "lighting can't follow the GPU"
+    capture(window, "monitor-gpu")
+
     # Both colour schemes.
     manager = Adw.StyleManager.get_default()
     window.show_page("Home")

@@ -62,6 +62,16 @@ PROFILE_ICONS = {
 }
 
 
+def gpu_summary(stats):
+    """A short line of whatever the GPU reports."""
+    parts = []
+    if stats["load"] is not None:
+        parts.append(f"{stats['load']:.0f}% load")
+    if stats["power"] is not None:
+        parts.append(f"{stats['power']:.0f} W")
+    return " · ".join(parts) or stats["name"]
+
+
 def apply_profile(ctx, choice, done):
     """Change the profile and remember it. Used by every control that offers one."""
 
@@ -119,6 +129,8 @@ class HomePage(Page):
         self.gauges = {"cpu": Gauge("CPU", "°C", 100), "load": Gauge("CPU load", "%", 100), "memory": Gauge("Memory", "%", 100)}
         if ctx.hw.igpu_temp() is not None:
             self.gauges["igpu"] = Gauge("Integrated GPU", "°C", 100)
+        if ctx.monitor.discrete_gpu():
+            self.gauges["dgpu"] = Gauge("Discrete GPU", "°C", 100)
         self.fan_gauges = {}
         for label, _rpm in ctx.hw.fans():
             self.fan_gauges[label] = Gauge(label, "rpm", 7000)
@@ -170,7 +182,13 @@ class HomePage(Page):
         gpu = meter.discrete_gpu()
         states = {"suspended": "Asleep", "active": "Awake"}
         self.tiles["dgpu"][0].set_label(states.get(gpu["state"], gpu["state"].title()) if gpu else "None")
-        self.tiles["dgpu"][1].set_label(f"{gpu['vendor']}. Temperature isn't read, to avoid waking it" if gpu else "")
+        stats = meter.gpu_stats
+        if "dgpu" in self.gauges:
+            self.gauges["dgpu"].set_value(stats["temperature"] if stats else None)
+        if stats:
+            self.tiles["dgpu"][1].set_label(gpu_summary(stats))
+        else:
+            self.tiles["dgpu"][1].set_label(f"{gpu['vendor']}. Readings appear when it wakes" if gpu else "")
         battery = hw.battery()
         if battery:
             self.tiles["battery"][0].set_label(f"{battery['capacity']}%")
