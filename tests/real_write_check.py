@@ -65,6 +65,8 @@ def main():
     # Fans: the question this test really answers.
     device = hw.fan_curve_device()
     before = fans()
+    # Your own fan curves must survive this test, so remember them too.
+    original_curves = {c: (hw.fan_curve_enabled(c), hw.fan_curve(c)) for c, _n in hw.fan_curve_channels()}
     full = [[30 + i * 10, 255] for i in range(8)]
     try:
         for channel, _name in hw.fan_curve_channels():
@@ -78,10 +80,14 @@ def main():
                 peak[name] = max(peak.get(name, 0), rpm)
         check("fans respond to a full speed curve", all(peak[n] > before[n] + 500 for n in before), f"{before} -> {peak}")
     finally:
-        for channel, _name in hw.fan_curve_channels():
-            writer.write(f"{device}/pwm{channel}_enable", 3)  # back to factory control
+        for channel, (enabled, points) in original_curves.items():
+            if enabled:
+                for path, value in system.fan_curve_writes(device, channel, points):
+                    writer.write(path, value)
+            else:
+                writer.write(f"{device}/pwm{channel}_enable", 3)  # back to factory control
     time.sleep(1)
-    check("fans back on factory control", all(not hw.fan_curve_enabled(c) for c, _n in hw.fan_curve_channels()))
+    check("fans back as they were", all(hw.fan_curve_enabled(c) == e for c, (e, _p) in original_curves.items()))
 
     # Keyboard. Nothing here saves to flash, and the saved effect goes back at the end.
     interface = hw.hidraw_keyboards()[0]
