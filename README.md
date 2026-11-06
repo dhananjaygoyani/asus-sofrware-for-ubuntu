@@ -6,7 +6,7 @@ lighting. It's an independent project, not made by or affiliated with ASUS.
 It works out what your laptop can do when it starts, from what the kernel and keyboard report, rather than from a
 list of supported models.
 
-![Home page](docs/screenshots/home-performance.png)
+![Home page](docs/screenshots/home-light.png)
 
 ## Try it safely
 

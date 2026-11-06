@@ -17,6 +17,7 @@ from .lighting import LightingPage, StudioPage  # noqa: E402
 from .pages import DashboardPage, FansPage, PerformancePage, SystemPage  # noqa: E402
 
 APP_ID = "org.openarmoury.App"
+WINDOW_BUTTONS = "close,minimize,maximize:"
 PAGES = (DashboardPage, PerformancePage, FansPage, LightingPage, StudioPage, ScenariosPage, MonitorPage, MacrosPage, SystemPage)
 
 
@@ -31,8 +32,9 @@ class Window(Adw.ApplicationWindow):
         ctx.monitor.sample()
         self.set_size_request(530, 400)
         self.pages = [page(ctx) for page in PAGES]
-        self.stack = Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE, transition_duration=120)
-        self.content_title = Adw.WindowTitle(title=self.pages[0].title)
+        self.stack = Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE, transition_duration=180)
+        self.content_title = Gtk.Label(label=self.pages[0].title, css_classes=["toolbar-title"])
+        self.page_enter = "page-enter-a"
         for page in self.pages:
             self.stack.add_named(page.widget, page.title)
 
@@ -46,13 +48,14 @@ class Window(Adw.ApplicationWindow):
         self.rows = rows
 
         sidebar = Adw.ToolbarView()
-        header = Adw.HeaderBar()
+        header = Adw.HeaderBar(decoration_layout=WINDOW_BUTTONS, show_title=False)
         sidebar.add_top_bar(header)
         sidebar.set_content(Gtk.ScrolledWindow(child=rows, vexpand=True, hscrollbar_policy=Gtk.PolicyType.NEVER))
         sidebar_page = Adw.NavigationPage(title="OpenArmoury", child=sidebar)
 
         content = Adw.ToolbarView()
-        content_header = Adw.HeaderBar(title_widget=self.content_title)
+        content_header = Adw.HeaderBar(decoration_layout=WINDOW_BUTTONS, show_title=False)
+        content_header.pack_start(self.content_title)
         content.add_top_bar(content_header)
         self.toasts = Adw.ToastOverlay(child=self.stack)
         ctx.toasts = self.toasts
@@ -92,7 +95,13 @@ class Window(Adw.ApplicationWindow):
             return
         self.active = self.pages[row.get_index()]
         self.stack.set_visible_child_name(self.active.title)
-        self.content_title.set_title(self.active.title)
+        self.content_title.set_label(self.active.title)
+        # Switching between two identical animations restarts it, even for the same page.
+        widget = self.active.widget
+        widget.remove_css_class("page-enter-a")
+        widget.remove_css_class("page-enter-b")
+        self.page_enter = "page-enter-b" if self.page_enter == "page-enter-a" else "page-enter-a"
+        widget.add_css_class(self.page_enter)
         self.content_page.set_title(self.active.title)
         self.split.set_show_content(True)
         self.active.refresh()
@@ -141,6 +150,23 @@ class App(Adw.Application):
         self.start_hidden = start_hidden
         self.holding = False
 
+    def _load_theme(self):
+        """A base theme, plus light or dark colours that follow the system setting."""
+        display = Gdk.Display.get_default()
+        manager = Adw.StyleManager.get_default()
+        self.colours = None
+        priority = Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+
+        def apply_colours(*_args):
+            if self.colours:
+                Gtk.StyleContext.remove_provider_for_display(display, self.colours)
+            self.colours = _css("theme-dark.css" if manager.get_dark() else "theme-light.css")
+            Gtk.StyleContext.add_provider_for_display(display, self.colours, priority)
+
+        Gtk.StyleContext.add_provider_for_display(display, _css("theme.css"), priority)
+        apply_colours()
+        manager.connect("notify::dark", apply_colours)
+
     def set_background(self, enabled):
         """Keep the app alive with no window open."""
         if enabled and not self.holding:
@@ -152,17 +178,19 @@ class App(Adw.Application):
 
     def do_activate(self):
         if not self.window:
-            # The theme is designed for dark only, so it doesn't follow the system setting.
-            Adw.StyleManager.get_default().set_color_scheme(Adw.ColorScheme.FORCE_DARK)
-            provider = Gtk.CssProvider()
-            provider.load_from_path(str(pathlib.Path(__file__).with_name("theme.css")))
-            Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+            self._load_theme()
             self.window = Window(self, self.ctx)
             self.window.update_background()
         if self.start_hidden:
             self.start_hidden = False
             return
         self.window.present()
+
+
+def _css(name):
+    provider = Gtk.CssProvider()
+    provider.load_from_path(str(pathlib.Path(__file__).with_name(name)))
+    return provider
 
 
 def build_context(demo_root=None, config_dir=None):

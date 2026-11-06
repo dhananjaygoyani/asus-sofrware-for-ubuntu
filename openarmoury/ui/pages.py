@@ -84,7 +84,7 @@ class DashboardPage(Page):
         self.widget = Gtk.ScrolledWindow(child=clamp, hscrollbar_policy=Gtk.PolicyType.NEVER)
 
         identity = ctx.hw.identity()
-        body.append(Gtk.Label(label=(identity["product"] or "This laptop").upper(), xalign=0, css_classes=["home-title"]))
+        body.append(Gtk.Label(label=identity["product"].split("_")[0] if identity["product"] else "This laptop", xalign=0, css_classes=["home-title"]))
         body.append(Gtk.Label(label=f"Board {identity['board']} · Firmware {identity['bios']}", xalign=0, css_classes=["dim-label", "caption"]))
 
         conflicts = ctx.hw.conflicts()
@@ -93,7 +93,7 @@ class DashboardPage(Page):
 
         choices = ctx.hw.profile_choices()
         if choices:
-            body.append(Gtk.Label(label="OPERATING MODE", xalign=0, css_classes=["section-title"]))
+            body.append(Gtk.Label(label="Operating mode", xalign=0, css_classes=["section-title"]))
             row = Gtk.Box(spacing=10, homogeneous=True)
             leader = None
             for choice in choices:
@@ -102,7 +102,7 @@ class DashboardPage(Page):
                 image.set_accessible_role(Gtk.AccessibleRole.PRESENTATION)
                 content.append(image)
                 content.append(Gtk.Label(label=PROFILE_LABELS.get(choice, choice.title())))
-                button = Gtk.ToggleButton(child=content, group=leader, css_classes=["mode-tile"])
+                button = Gtk.ToggleButton(child=content, group=leader, css_classes=["mode-tile", f"stagger-{len(self.mode_buttons) % 6}"])
                 button.update_property([Gtk.AccessibleProperty.LABEL], [f"{PROFILE_LABELS.get(choice, choice.title())} mode"])
                 leader = leader or button
                 button.connect("toggled", self._mode_toggled, choice)
@@ -110,7 +110,7 @@ class DashboardPage(Page):
                 self.mode_buttons[choice] = button
             body.append(row)
 
-        body.append(Gtk.Label(label="LIVE", xalign=0, css_classes=["section-title"], margin_top=6))
+        body.append(Gtk.Label(label="Live", xalign=0, css_classes=["section-title"], margin_top=6))
         gauges = Gtk.FlowBox(selection_mode=Gtk.SelectionMode.NONE, column_spacing=10, row_spacing=10, homogeneous=True, min_children_per_line=2, max_children_per_line=6)
         self.gauges = {"cpu": Gauge("CPU", "°C", 100), "load": Gauge("CPU load", "%", 100), "memory": Gauge("Memory", "%", 100)}
         if ctx.hw.igpu_temp() is not None:
@@ -118,23 +118,25 @@ class DashboardPage(Page):
         self.fan_gauges = {}
         for label, _rpm in ctx.hw.fans():
             self.fan_gauges[label] = Gauge(label, "rpm", 7000)
-        for gauge in list(self.gauges.values()) + list(self.fan_gauges.values()):
-            gauges.append(self._card(gauge))
+        for index, gauge in enumerate(list(self.gauges.values()) + list(self.fan_gauges.values())):
+            gauges.append(self._card(gauge, index))
         body.append(gauges)
 
-        body.append(Gtk.Label(label="STATUS", xalign=0, css_classes=["section-title"], margin_top=6))
+        body.append(Gtk.Label(label="Status", xalign=0, css_classes=["section-title"], margin_top=6))
         grid = Gtk.FlowBox(selection_mode=Gtk.SelectionMode.NONE, column_spacing=10, row_spacing=10, homogeneous=True, min_children_per_line=2, max_children_per_line=4)
         self.tiles = {}
-        for key, title in (("dgpu", "Discrete GPU"), ("battery", "Battery"), ("keyboard", "Keyboard"), ("profile", "Current mode")):
+        for index, (key, title) in enumerate((("dgpu", "Discrete GPU"), ("battery", "Battery"), ("keyboard", "Keyboard"), ("profile", "Current mode"))):
             box, value, detail = stat_tile(title)
+            box.add_css_class("home-card")
+            box.add_css_class(f"stagger-{index % 6}")
             grid.append(box)
             self.tiles[key] = (value, detail)
         body.append(grid)
         self.refresh()
 
     @staticmethod
-    def _card(child):
-        box = Gtk.Box(css_classes=["home-card"])
+    def _card(child, index):
+        box = Gtk.Box(css_classes=["home-card", f"stagger-{index % 6}"])
         box.append(child)
         return box
 
@@ -315,7 +317,7 @@ class FansPage(Page):
     def _preset_changed(self, row, _p):
         if self.updating or row.get_selected() == 0:
             return
-        self.curve.set_points(FAN_PRESETS[list(FAN_PRESETS)[row.get_selected() - 1]])
+        self.curve.morph_to(FAN_PRESETS[list(FAN_PRESETS)[row.get_selected() - 1]])
         self._edited(self.curve.points)
 
     def _edited(self, points):

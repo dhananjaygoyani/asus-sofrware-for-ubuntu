@@ -11,7 +11,10 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
 from openarmoury import demo  # noqa: E402
 from openarmoury.ui.app import App, build_context  # noqa: E402
+from openarmoury.ui.pages import FAN_PRESETS  # noqa: E402
 from gi.repository import Adw, GLib, Gtk  # noqa: E402
+
+SETTINGS_ANIMATIONS = "gtk-enable-animations"
 
 GPU_ATTRIBUTE = "/sys/class/firmware-attributes/asus-armoury/attributes/dgpu_disable/current_value"
 OUT = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else "docs/screenshots")
@@ -60,6 +63,8 @@ def scenario(app):
     yield 400
     assert ctx.hw.profile() == "performance", "mode tile did not change the profile"
     assert all(g.value is not None for g in home.gauges.values()), "a gauge has no reading"
+    yield 800
+    assert all(abs(g.shown - g.value) < 1 for g in home.gauges.values()), "a gauge didn't finish animating"
     capture(window, "home-performance")
     window.show_page("Performance")
     page_named(window, "Performance").buttons["balanced"].set_active(True)
@@ -79,7 +84,9 @@ def scenario(app):
     window.show_page("Fans")
     fans = page_named(window, "Fans")
     fans.preset_row.set_selected(3)
-    yield 200
+    assert fans.curve.points == FAN_PRESETS["Cool"], "preset must be the target straight away"
+    yield 500
+    assert fans.curve.drawn is None, "curve animation didn't finish"
     fans._apply(True)
     yield 500
     assert ctx.hw.fan_curve_enabled(1), "curve not enabled"
@@ -260,6 +267,40 @@ def scenario(app):
     yield 300
     assert not any(" 5db4" in line for line in pathlib.Path(ctx.demo_root + "/dev/hidraw0").read_text().splitlines())
     Context.is_demo = property(lambda self: self.demo_root is not None)
+
+    # Both colour schemes.
+    manager = Adw.StyleManager.get_default()
+    window.show_page("Home")
+    for scheme, name in ((Adw.ColorScheme.FORCE_LIGHT, "home-light"), (Adw.ColorScheme.FORCE_DARK, "home-dark")):
+        manager.set_color_scheme(scheme)
+        yield 900
+        capture(window, name)
+    manager.set_color_scheme(Adw.ColorScheme.FORCE_LIGHT)
+    yield 300
+    window.show_page("Fans")
+    yield 600
+    capture(window, "fans-light")
+    window.show_page("Lighting")
+    yield 600
+    capture(window, "lighting-light")
+    window.show_page("Light Studio")
+    yield 600
+    capture(window, "studio-light")
+    window.show_page("System")
+    yield 600
+    capture(window, "system-light")
+    manager.set_color_scheme(Adw.ColorScheme.DEFAULT)
+
+    # With animations off everything still lands immediately on the right values.
+    Gtk.Settings.get_default().set_property(SETTINGS_ANIMATIONS, False)
+    window.show_page("Home")
+    yield 100
+    window._slow()
+    assert all(abs(g.shown - g.value) < 1 for g in home.gauges.values()), "gauges animate with animations off"
+    window.show_page("Fans")
+    fans.preset_row.set_selected(1)
+    assert fans.curve.drawn is None, "curve animates with animations off"
+    Gtk.Settings.get_default().set_property(SETTINGS_ANIMATIONS, True)
 
     # Narrow window: the sidebar should collapse rather than overflow.
     window.set_default_size(530, 700)

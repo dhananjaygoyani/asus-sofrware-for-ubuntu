@@ -8,7 +8,9 @@ gi.require_version("Gsk", "4.0")
 from gi.repository import Adw, Gdk, GLib, Graphene, Gsk, Gtk  # noqa: E402
 
 
-ACCENT = (0.85, 0.02, 0.16)
+ACCENT = (0.04, 0.52, 1.0)
+GAUGE_MS = 600
+CURVE_MS = 380
 
 
 def _colour(r, g, b, a=1.0):
@@ -80,6 +82,8 @@ class Gauge(Canvas):
         self.unit = unit
         self.maximum = maximum
         self.value = None
+        self.shown = 0.0
+        self.animation = None
 
     def do_measure(self, orientation, _for_size):
         if orientation == Gtk.Orientation.VERTICAL:
@@ -90,6 +94,19 @@ class Gauge(Canvas):
         self.value = value
         reading = f"{value:.0f} {self.unit}" if value is not None else "not available"
         self.update_property([Gtk.AccessibleProperty.LABEL], [f"{self.title}: {reading}"])
+        if value is None:
+            self.queue_draw()
+            return
+        if self.animation:
+            self.animation.pause()
+        # Adwaita skips to the end by itself if animations are off or the dial isn't on screen.
+        target = Adw.CallbackAnimationTarget.new(self._animate)
+        self.animation = Adw.TimedAnimation.new(self, self.shown, value, GAUGE_MS, target)
+        self.animation.set_easing(Adw.Easing.EASE_OUT_CUBIC)
+        self.animation.play()
+
+    def _animate(self, value):
+        self.shown = value
         self.queue_draw()
 
     def _arc(self, centre_x, centre_y, radius, amount):
@@ -117,16 +134,16 @@ class Gauge(Canvas):
         radius = min(width, height) / 2 - 14
         stroke = Gsk.Stroke.new(9)
         stroke.set_line_cap(Gsk.LineCap.ROUND)
-        snapshot.append_stroke(self._arc(centre_x, centre_y, radius, 1.0), stroke, _colour(1, 1, 1, 0.09))
         fg = self.get_color()
+        snapshot.append_stroke(self._arc(centre_x, centre_y, radius, 1.0), stroke, _colour(fg.red, fg.green, fg.blue, 0.12))
         if self.value is None:
             self._centred(snapshot, "–", centre_x, centre_y - 10, fg)
         else:
-            amount = max(0.0, min(1.0, self.value / self.maximum))
+            amount = max(0.0, min(1.0, self.shown / self.maximum))
             if amount > 0.005:
-                colour = _colour(1.0, 0.2, 0.3) if amount > 0.85 else _colour(*ACCENT)
+                colour = _colour(1.0, 0.27, 0.23) if amount > 0.85 else _colour(*ACCENT)
                 snapshot.append_stroke(self._arc(centre_x, centre_y, radius, amount), stroke, colour)
-            text = GLib.markup_escape_text(f"{self.value:,.0f}")
+            text = GLib.markup_escape_text(f"{self.shown:,.0f}")
             self._centred(snapshot, "", centre_x, centre_y - 20, fg, f"<span size='x-large' weight='heavy'>{text}</span>")
             self._centred(snapshot, self.unit, centre_x, centre_y + 8, _colour(fg.red, fg.green, fg.blue, 0.6))
         self._centred(snapshot, self.title, centre_x, height - 22, _colour(fg.red, fg.green, fg.blue, 0.75))
@@ -241,6 +258,8 @@ class CurveView(Canvas):
         self.on_change = on_change
         self.selected = None
         self.area = (0, 0, 1, 1)
+        self.drawn = None
+        self.animation = None
         self.update_property(
             [Gtk.AccessibleProperty.LABEL],
             ["Fan curve editor. Left and right arrows pick a point, up and down change its speed."],
@@ -255,8 +274,34 @@ class CurveView(Canvas):
         self.drag_start = (0, 0)
 
     def set_points(self, points):
+        self._stop_animation()
         self.points = [list(p) for p in points]
         self.queue_draw()
+
+    def morph_to(self, points):
+        """Move smoothly to new points. self.points is the target straight away, so Apply is always right."""
+        self._stop_animation()
+        start = [list(p) for p in self.points]
+        self.points = [list(p) for p in points]
+        if len(start) != len(self.points):
+            self.queue_draw()
+            return
+
+        def step(amount):
+            self.drawn = [[a[i] + (b[i] - a[i]) * amount for i in range(2)] for a, b in zip(start, self.points)]
+            self.queue_draw()
+
+        target = Adw.CallbackAnimationTarget.new(step)
+        self.animation = Adw.TimedAnimation.new(self, 0, 1, CURVE_MS, target)
+        self.animation.set_easing(Adw.Easing.EASE_OUT_CUBIC)
+        self.animation.connect("done", lambda _a: self._stop_animation())
+        self.animation.play()
+
+    def _stop_animation(self):
+        animation, self.animation = self.animation, None
+        if animation:
+            animation.pause()
+        self.drawn = None
 
     def _xy(self, point):
         left, top, width, height = self.area
@@ -265,6 +310,7 @@ class CurveView(Canvas):
         return x, y
 
     def _begin(self, _gesture, x, y):
+        self._stop_animation()
         self.grab_focus()
         self.drag_start = (x, y)
         best, best_distance = None, 28
@@ -327,18 +373,19 @@ class CurveView(Canvas):
         if not self.points:
             return
         accent = _colour(*ACCENT)
+        shown = self.drawn or self.points
         area = Gsk.PathBuilder.new()
-        area.move_to(self._xy(self.points[0])[0], top + h)
-        for point in self.points:
+        area.move_to(self._xy(shown[0])[0], top + h)
+        for point in shown:
             area.line_to(*self._xy(point))
-        area.line_to(self._xy(self.points[-1])[0], top + h)
+        area.line_to(self._xy(shown[-1])[0], top + h)
         area.close()
         snapshot.append_fill(area.to_path(), Gsk.FillRule.WINDING, _colour(*ACCENT, 0.18))
         line = Gsk.PathBuilder.new()
-        for index, point in enumerate(self.points):
+        for index, point in enumerate(shown):
             (line.line_to if index else line.move_to)(*self._xy(point))
         snapshot.append_stroke(line.to_path(), Gsk.Stroke.new(2.5), accent)
-        for index, point in enumerate(self.points):
+        for index, point in enumerate(shown):
             x, y = self._xy(point)
             radius = 8 if index == self.selected else 6
             _fill_rounded(snapshot, x - radius, y - radius, radius * 2, radius * 2, radius, accent)
